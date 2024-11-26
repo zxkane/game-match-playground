@@ -6,14 +6,21 @@ import '@aws-amplify/ui-react/styles.css';
 import DashboardLayout from '../components/DashboardLayout';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/api';
-import { Breadcrumbs, Link as MuiLink, Typography, Button } from '@mui/material';
+import { Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { UserProvider, useUser } from '../context/UserContext';
 import BreadcrumbsComponent from '../components/BreadcrumbsComponent';
 
-const client = generateClient<Schema>({
-  authMode: 'userPool',
-});
+const client = generateClient<Schema>();
+
+type Game = {
+  id: string | null;
+  name: string;
+  owner: string;
+  description: string | null;
+  status: 'draft' | 'active' | 'completed' | null;
+  updatedAt: string;
+};
 
 function SignInHeader() {
   return (
@@ -36,7 +43,7 @@ export default function Home() {
 function HomeContent() {
   const router = useRouter();
   const { userEmail } = useUser();
-  const [games, setGames] = useState<Schema['Game']['type'][]>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
