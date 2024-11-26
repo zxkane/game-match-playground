@@ -8,11 +8,7 @@ import { Schema } from '../../../../amplify/data/resource';
 import DashboardLayout from '../../../components/DashboardLayout';
 import {
   TextField,
-  Button,
-  Breadcrumbs,
-  Link as MuiLink,
-  Typography
-} from '@mui/material';
+  Button} from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import BreadcrumbsComponent from '../../../components/BreadcrumbsComponent';

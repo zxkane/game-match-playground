@@ -10,7 +10,7 @@ import { Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { UserProvider, useUser } from '../context/UserContext';
 import BreadcrumbsComponent from '../components/BreadcrumbsComponent';
-import { DataGrid, GridColDef, GridValueFormatter } from '@mui/x-data-grid';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 
 const client = generateClient<Schema>();
@@ -48,10 +48,9 @@ function HomeContent() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
-  const [isMobile, setIsMobile] = useState(window?.innerWidth < 600);
 
   useEffect(() => {
-    const fetchGames = async (userId: string) => {
+    const fetchGames = async () => {
       try {
         setIsLoading(true);
         const gamesResult = await client.models.Game.list({
@@ -66,24 +65,9 @@ function HomeContent() {
     };
 
     if (userEmail) {
-      fetchGames(userEmail);
+      fetchGames();
     }
   }, [userEmail]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window?.innerWidth < 600;
-      setIsMobile(mobile);
-      setColumnVisibilityModel({
-        description: !mobile,
-        owner: !mobile,
-      });
-    };
-    
-    handleResize(); // Set initial state
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const columns: GridColDef[] = [
     { 

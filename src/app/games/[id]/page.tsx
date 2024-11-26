@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api';
 import { Schema } from '../../../../amplify/data/resource';
 import DashboardLayout from '../../../components/DashboardLayout';
@@ -21,7 +20,6 @@ const client = generateClient<Schema>();
 
 export default function GameDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { user } = useAuthenticator((context) => [context.user]);
   const [game, setGame] = useState<Schema['Game']['type'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
