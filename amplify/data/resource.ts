@@ -3,27 +3,36 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 const schema = a.schema({
   GameStatus: a.enum(['draft', 'active', 'completed']),
   Game: a.model({
-    gameId: a.id().required(),
+    gameId: a.id(),
     name: a.string().required(),
     description: a.string(),
-    participants: a.string().array(),
-    watchers: a.string().array(),
     owner: a.string().required(),
-    createdTime: a.datetime().required(),
-    updatedTime: a.datetime().required(),
-    status: a.ref('GameStatus').required(),
+    createdAt: a.datetime().required(),
+    updatedAt: a.datetime().required(),
+    status: a.ref('GameStatus'),
   })
-  .identifier(['owner', 'createdTime'])
+  .identifier(['gameId'])
+  .disableOperations(['create', 'update'])
   .secondaryIndexes((index) => [
-    index('gameId')
+    index('owner').sortKeys(['updatedAt']).queryField('listByOwner')
   ])
   .authorization(allow => [
-    allow.owner(),
-    allow.ownersDefinedIn('participants').to(['read', 'update']),
-    allow.ownersDefinedIn('watchers').to(['read']),
+    allow.authenticated().to(['read']),
+    allow.ownerDefinedIn('owner'),
   ]),
+  
+  customCreateGame: a.mutation()
+    .arguments({
+      name: a.string().required(),
+      description: a.string(),
+    })
+    .returns(a.ref('Game'))
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.custom({
+      dataSource: a.ref('Game'),
+      entry: './create-game-handler.js'
+    }))
 });
-
 
 export type Schema = ClientSchema<typeof schema>;
 

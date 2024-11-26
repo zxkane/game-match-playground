@@ -20,14 +20,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.className}>
-      <body>
-        <AmplifyProvider>
-          <main className="min-h-screen">
-            {children}
-          </main>
-        </AmplifyProvider>
-      </body>
-    </html>
+      <html lang="en" className={inter.className}>
+        <body>
+          <AmplifyProvider>
+            <main className="min-h-screen">
+              {children}
+            </main>
+          </AmplifyProvider>
+        </body>
+      </html>
   );
 }

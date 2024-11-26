@@ -1,10 +1,18 @@
 'use client';
 
 import { Authenticator } from '@aws-amplify/ui-react';
-import { fetchUserAttributes } from 'aws-amplify/auth';
 import { useState, useEffect } from 'react';
 import '@aws-amplify/ui-react/styles.css';
 import DashboardLayout from '../components/DashboardLayout';
+import { Schema } from '../../amplify/data/resource';
+import { generateClient } from 'aws-amplify/api';
+import { Breadcrumbs, Link as MuiLink, Typography, Button } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { UserProvider, useUser } from '../context/UserContext';
+
+const client = generateClient<Schema>({
+  authMode: 'userPool',
+});
 
 function SignInHeader() {
   return (
@@ -16,19 +24,39 @@ function SignInHeader() {
 }
 
 export default function Home() {
-  const [userEmail, setUserEmail] = useState<string>('');
+  
+  return (
+    <UserProvider>
+      <HomeContent />
+    </UserProvider>
+  );
+}
+
+function HomeContent() {
+  const router = useRouter();
+  const { userEmail } = useUser();
+  const [games, setGames] = useState<Schema['Game']['type'][]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const getUserEmail = async () => {
+    const fetchGames = async (userId: string) => {
       try {
-        const attributes = await fetchUserAttributes();
-        setUserEmail(attributes.email || '');
+        setIsLoading(true);
+        const gamesResult = await client.models.Game.list({
+          selectionSet: ['gameId', 'name', 'owner', 'description', 'status', 'updatedAt']
+        });
+        setGames(gamesResult.data || []);
       } catch (error) {
-        console.error('Error fetching user attributes:', error);
+        console.error('Error fetching games:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    getUserEmail();
-  }, []);
+
+    if (userEmail) {
+      fetchGames(userEmail);
+    }
+  }, [userEmail]);
 
   return (
     <DashboardLayout>
@@ -42,19 +70,63 @@ export default function Home() {
           initialState="signIn"
           socialProviders={['google']}
         >
-          {({ signOut, user }) => (
-            <div className="max-w-4xl mx-auto">
-              <h1 className="text-2xl font-bold mb-4">
-                Welcome {userEmail || user?.username || 'User'}!
-              </h1>
+          {({ }) => (
+            <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <p>You are now signed in to the Game Match App</p>
-                <button
-                  onClick={signOut}
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                <Breadcrumbs aria-label="breadcrumb">
+                  <MuiLink underline="hover" color="inherit" href="/">
+                    Home
+                  </MuiLink>
+                  <MuiLink
+                    underline="hover"
+                    color="inherit"
+                    href="/games"
+                  >
+                    Games
+                  </MuiLink>
+                  <Typography sx={{ color: 'text.primary' }}>Your Games</Typography>
+                </Breadcrumbs>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => router.push('/games/new')}
                 >
-                  Sign Out
-                </button>
+                  Create New Game
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {isLoading ? (
+                  <div className="col-span-2 text-center p-8">
+                    <Typography variant="body1" color="text.secondary">
+                      Loading games...
+                    </Typography>
+                  </div>
+                ) : games.length === 0 ? (
+                  <div className="col-span-2 text-center p-8 border rounded-lg bg-gray-50">
+                    <Typography variant="body1" color="text.secondary">
+                      No games found. Create a new game to get started.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => router.push('/games/new')}
+                      sx={{ mt: 2 }}
+                    >
+                      Create New Game
+                    </Button>
+                  </div>
+                ) : (
+                  games.map((game) => (
+                    <div key={game.gameId} className="border p-4 rounded-lg shadow">
+                      <h3 className="font-semibold">{game.name}</h3>
+                      <p className="text-gray-600">{game.description}</p>
+                      <div className="mt-2 text-sm text-gray-500">
+                        <p>Status: {game.status}</p>
+                        <p>Created: {new Date(game.updatedAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

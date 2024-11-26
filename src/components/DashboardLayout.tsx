@@ -12,8 +12,9 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { fetchUserAttributes, signOut } from 'aws-amplify/auth';
-import { useState, useEffect } from 'react';
+import { signOut } from 'aws-amplify/auth';
+import { useState } from 'react';
+import { useUser } from '../context/UserContext';
 
 const drawerWidth = 240;
 
@@ -52,20 +53,8 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [open, setOpen] = React.useState(false);
-  const [userEmail, setUserEmail] = useState<string>('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  useEffect(() => {
-    const getUserEmail = async () => {
-      try {
-        const attributes = await fetchUserAttributes();
-        setUserEmail(attributes.email || '');
-      } catch (error) {
-        console.error('Error fetching user attributes:', error);
-      }
-    };
-    getUserEmail();
-  }, []);
+  const { userEmail } = useUser();
 
   const handleDrawerOpen = () => {
     setOpen(true);
