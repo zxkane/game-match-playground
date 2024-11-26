@@ -84,7 +84,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <Box sx={{ display: 'flex' }}>
       <AppBar position="fixed" open={open}>
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
+        <Toolbar 
+          sx={{ 
+            justifyContent: 'space-between',
+            px: { xs: 1, sm: 2 }
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               color="inherit"
@@ -167,7 +172,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 1, sm: 2, md: 3 },
           transition: theme => theme.transitions.create('margin', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,

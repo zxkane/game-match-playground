@@ -10,6 +10,8 @@ import { Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { UserProvider, useUser } from '../context/UserContext';
 import BreadcrumbsComponent from '../components/BreadcrumbsComponent';
+import { DataGrid, GridColDef, GridValueFormatter } from '@mui/x-data-grid';
+import AddIcon from '@mui/icons-material/Add';
 
 const client = generateClient<Schema>();
 
@@ -45,6 +47,8 @@ function HomeContent() {
   const { userEmail } = useUser();
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
+  const [isMobile, setIsMobile] = useState(window?.innerWidth < 600);
 
   useEffect(() => {
     const fetchGames = async (userId: string) => {
@@ -66,6 +70,66 @@ function HomeContent() {
     }
   }, [userEmail]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window?.innerWidth < 600;
+      setIsMobile(mobile);
+      setColumnVisibilityModel({
+        description: !mobile,
+        owner: !mobile,
+      });
+    };
+    
+    handleResize(); // Set initial state
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const columns: GridColDef[] = [
+    { 
+      field: 'name', 
+      headerName: 'Name', 
+      width: 150,
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <div style={{ whiteSpace: 'normal', lineHeight: '1.2em' }}>
+          {params.value}
+        </div>
+      )
+    },
+    { 
+      field: 'description', 
+      headerName: 'Description', 
+      width: 300,
+      flex: 2,
+      minWidth: 200,
+    },
+    { 
+      field: 'status', 
+      headerName: 'Status', 
+      width: 120,
+      flex: 0.8,
+      minWidth: 100 
+    },
+    { 
+      field: 'owner', 
+      headerName: 'Creator', 
+      width: 200,
+      flex: 1,
+      minWidth: 150,
+    },
+    { 
+      field: 'updatedAt', 
+      headerName: 'Created', 
+      width: 150,
+      flex: 1,
+      minWidth: 120,
+      valueFormatter: (value: string) => 
+        new Date(value).toLocaleDateString()
+    },
+  ];
+
   if (!userEmail) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -84,7 +148,7 @@ function HomeContent() {
 
   return (
     <DashboardLayout>
-      <main className="min-h-screen p-8">
+      <main className="min-h-screen p-4 sm:p-8">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <BreadcrumbsComponent
@@ -99,20 +163,22 @@ function HomeContent() {
                 variant="contained"
                 color="primary"
                 onClick={() => router.push('/games/new')}
+                sx={{ mt: 2 }}
+                startIcon={<AddIcon />}
               >
-                Create New Game
+                New Game
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {isLoading ? (
-              <div className="col-span-2 text-center p-8">
+              <div className="col-span-1 text-center p-8">
                 <Typography variant="body1" color="text.secondary">
                   Loading games...
                 </Typography>
               </div>
             ) : games.length === 0 ? (
-              <div className="col-span-2 text-center p-8 border rounded-lg bg-gray-50">
+              <div className="col-span-1 text-center p-8 border rounded-lg bg-gray-50">
                 <Typography variant="body1" color="text.secondary">
                   No games found. Create a new game to get started.
                 </Typography>
@@ -121,25 +187,38 @@ function HomeContent() {
                   color="primary"
                   onClick={() => router.push('/games/new')}
                   sx={{ mt: 2 }}
+                  startIcon={<AddIcon />}
                 >
-                  Create New Game
+                  New Game
                 </Button>
               </div>
             ) : (
-              games.map((game) => (
-                <div 
-                  key={game.id} 
-                  className="border p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => router.push(`/games/${game.id}`)}
-                >
-                  <h3 className="font-semibold">{game.name}</h3>
-                  <p className="text-gray-600">{game.description}</p>
-                  <div className="mt-2 text-sm text-gray-500">
-                    <p>Status: {game.status}</p>
-                    <p>Created: {new Date(game.updatedAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              ))
+              <div className="w-full overflow-x-auto" style={{ height: 400 }}>
+                <DataGrid
+                  rows={games}
+                  columns={columns}
+                  pageSizeOptions={[5]}
+                  onRowClick={(params) => router.push(`/games/${params.id}`)}
+                  columnVisibilityModel={columnVisibilityModel}
+                  onColumnVisibilityModelChange={(newModel) => 
+                    setColumnVisibilityModel(newModel)
+                  }
+                  style={{ height: 400 }}
+                  disableColumnMenu
+                  sx={{
+                    '& .MuiDataGrid-cell': {
+                      whiteSpace: 'normal',
+                      lineHeight: 'normal',
+                      padding: '8px',
+                    },
+                    '@media (max-width: 600px)': {
+                      '& .MuiDataGrid-cell': {
+                        fontSize: '0.875rem',
+                      },
+                    },
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>
