@@ -148,7 +148,7 @@ function HomeContent() {
 
   return (
     <DashboardLayout>
-      <main className="min-h-screen p-4 sm:p-8">
+      <main className="min-h-screen p-2 sm:p-8">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <BreadcrumbsComponent

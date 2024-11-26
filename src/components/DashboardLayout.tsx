@@ -9,12 +9,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { signOut } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
+import { Divider, Paper } from '@mui/material';
 
 const drawerWidth = 240;
 
@@ -22,9 +24,11 @@ interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
 }
 
-const AppBar = styled(MuiAppBar, {
+const StyledAppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
 })<AppBarProps>(({ theme, open }) => ({
+  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+  boxShadow: '0 3px 5px 2px rgba(139, 69, 19, .3)',
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -37,6 +41,13 @@ const AppBar = styled(MuiAppBar, {
       duration: theme.transitions.duration.enteringScreen,
     }),
   }),
+}));
+
+const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
+  '& .MuiDrawer-paper': {
+    backgroundColor: theme.palette.background.paper,
+    borderRight: `1px solid ${theme.palette.primary.light}`,
+  },
 }));
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -83,7 +94,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed" open={open}>
+      <StyledAppBar position="fixed" open={open}>
         <Toolbar 
           sx={{ 
             justifyContent: 'space-between',
@@ -100,20 +111,32 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <MenuIcon />
             </IconButton>
-            <SportsEsportsIcon sx={{ mr: 1 }} />
+            <RestaurantIcon sx={{ mr: 1, color: '#F4C430' }} />
+            <SportsEsportsIcon sx={{ mr: 1, color: '#F4C430' }} />
             <Typography
               variant="h6"
               noWrap
               component="div"
-              sx={{ display: { xs: 'none', sm: 'block' } }}
+              sx={{ 
+                display: { xs: 'none', sm: 'block' },
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+              }}
             >
-              Game Match
+              Game Match - Thanksgiving Edition
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {userEmail && (
               <>
-                <Typography variant="body2" color="inherit">
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: '#FFFFFF',
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                  }}
+                >
                   {userEmail}
                 </Typography>
                 <IconButton
@@ -122,7 +145,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   aria-controls="menu-appbar"
                   aria-haspopup="true"
                   onClick={handleMenu}
-                  color="inherit"
+                  sx={{ color: '#F4C430' }}
                 >
                   <AccountCircle />
                 </IconButton>
@@ -147,8 +170,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             )}
           </Box>
         </Toolbar>
-      </AppBar>
-      <MuiDrawer
+      </StyledAppBar>
+      <StyledDrawer
         sx={{
           width: drawerWidth,
           flexShrink: 0,
@@ -162,12 +185,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         open={open}
       >
         <DrawerHeader>
+          <Typography variant="h6" color="primary" sx={{ flexGrow: 1, ml: 2 }}>
+            🦃 Menu
+          </Typography>
           <IconButton onClick={handleDrawerClose}>
             <ChevronLeftIcon />
           </IconButton>
         </DrawerHeader>
+        <Divider />
         {/* Add your drawer content here */}
-      </MuiDrawer>
+      </StyledDrawer>
       <Box
         component="main"
         sx={{
@@ -185,10 +212,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             }),
             marginLeft: 0,
           }),
+          backgroundColor: 'background.default',
         }}
       >
         <DrawerHeader />
-        {children}
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 2,
+            backgroundColor: 'background.paper',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'primary.light',
+          }}
+        >
+          {children}
+        </Paper>
       </Box>
     </Box>
   );
