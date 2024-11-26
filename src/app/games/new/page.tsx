@@ -15,6 +15,8 @@ import {
 } from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import BreadcrumbsComponent from '../../../components/BreadcrumbsComponent';
+import RequireAuth from '../../../components/RequireAuth';
 
 const client = generateClient<Schema>();
 
@@ -52,61 +54,61 @@ export default function NewGame() {
   };
 
   return (
-    <UserProvider>
-      <DashboardLayout>
-        <main className="min-h-screen p-8">
-          <Authenticator>
-            {({ }) => (
-              <div className="max-w-2xl mx-auto space-y-6">
-                <Breadcrumbs aria-label="breadcrumb">
-                  <MuiLink underline="hover" color="inherit" href="/">
-                    Home
-                  </MuiLink>
-                  <MuiLink underline="hover" color="inherit" href="/games">
-                    Games
-                  </MuiLink>
-                  <Typography sx={{ color: 'text.primary' }}>New Game</Typography>
-                </Breadcrumbs>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <TextField
-                    fullWidth
-                    label="Game Name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+    <RequireAuth>
+      <UserProvider>
+        <DashboardLayout>
+          <main className="min-h-screen p-8">
+            <Authenticator>
+              {({ }) => (
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <BreadcrumbsComponent
+                    links={[
+                      { href: '/', label: 'Home' },
+                      { href: '/', label: 'Games' }
+                    ]}
+                    current="New Game"
                   />
 
-                  <TextField
-                    fullWidth
-                    label="Description"
-                    multiline
-                    rows={4}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <TextField
+                      fullWidth
+                      label="Game Name"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
 
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outlined"
-                      onClick={() => router.push('/')}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={isSubmitting}
-                    >
-                      Create Game
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </Authenticator>
-        </main>
-      </DashboardLayout>
-    </UserProvider>
+                    <TextField
+                      fullWidth
+                      label="Description"
+                      multiline
+                      rows={4}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outlined"
+                        onClick={() => router.push('/')}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={isSubmitting}
+                      >
+                        Create Game
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </Authenticator>
+          </main>
+        </DashboardLayout>
+      </UserProvider>
+    </RequireAuth>
   );
 } 
