@@ -3,7 +3,7 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 const schema = a.schema({
   GameStatus: a.enum(['draft', 'active', 'completed']),
   Game: a.model({
-    gameId: a.id(),
+    id: a.id(),
     name: a.string().required(),
     description: a.string(),
     owner: a.string().required(),
@@ -11,7 +11,7 @@ const schema = a.schema({
     updatedAt: a.datetime().required(),
     status: a.ref('GameStatus'),
   })
-  .identifier(['gameId'])
+  .identifier(['id'])
   .disableOperations(['create', 'update'])
   .secondaryIndexes((index) => [
     index('owner').sortKeys(['updatedAt']).queryField('listByOwner')

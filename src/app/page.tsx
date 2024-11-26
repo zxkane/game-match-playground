@@ -43,7 +43,7 @@ function HomeContent() {
       try {
         setIsLoading(true);
         const gamesResult = await client.models.Game.list({
-          selectionSet: ['gameId', 'name', 'owner', 'description', 'status', 'updatedAt']
+          selectionSet: ['id', 'name', 'owner', 'description', 'status', 'updatedAt']
         });
         setGames(gamesResult.data || []);
       } catch (error) {
@@ -86,13 +86,15 @@ function HomeContent() {
                   </MuiLink>
                   <Typography sx={{ color: 'text.primary' }}>Your Games</Typography>
                 </Breadcrumbs>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => router.push('/games/new')}
-                >
-                  Create New Game
-                </Button>
+                {games.length > 0 && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => router.push('/games/new')}
+                  >
+                    Create New Game
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isLoading ? (
@@ -117,7 +119,11 @@ function HomeContent() {
                   </div>
                 ) : (
                   games.map((game) => (
-                    <div key={game.gameId} className="border p-4 rounded-lg shadow">
+                    <div 
+                      key={game.id} 
+                      className="border p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => router.push(`/games/${game.id}`)}
+                    >
                       <h3 className="font-semibold">{game.name}</h3>
                       <p className="text-gray-600">{game.description}</p>
                       <div className="mt-2 text-sm text-gray-500">

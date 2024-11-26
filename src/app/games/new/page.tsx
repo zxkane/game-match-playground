@@ -43,7 +43,7 @@ export default function NewGame() {
         }
       });
 
-      router.push('/');
+      router.push(`/games/${newGame?.data?.id}`);
     } catch (error) {
       console.error('Error creating game:', error);
     } finally {

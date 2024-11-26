@@ -6,7 +6,7 @@ export function request(ctx) {
   return {
     operation: 'PutItem',
     key: util.dynamodb.toMapValues({ 
-      gameId: util.autoId(),
+      id: util.autoId(),
     }),
     attributeValues: util.dynamodb.toMapValues({
       name,
