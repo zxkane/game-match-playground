@@ -63,7 +63,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                 <BreadcrumbsComponent
                   links={[
                     { href: '/', label: 'Home' },
-                    { href: '/', label: 'Games' }
+                    { href: '/games', label: 'Games' }
                   ]}
                   current={game.name}
                 />
@@ -102,7 +102,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button
                       variant="outlined"
-                      onClick={() => router.push('/')}
+                      onClick={() => router.push('/games')}
                     >
                       Back to Games
                     </Button>

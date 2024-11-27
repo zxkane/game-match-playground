@@ -60,7 +60,7 @@ export default function NewGame() {
                   <BreadcrumbsComponent
                     links={[
                       { href: '/', label: 'Home' },
-                      { href: '/', label: 'Games' }
+                      { href: '/games', label: 'Games' }
                     ]}
                     current="New Game"
                   />
