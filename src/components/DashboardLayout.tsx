@@ -27,8 +27,8 @@ interface AppBarProps extends MuiAppBarProps {
 const StyledAppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
 })<AppBarProps>(({ theme, open }) => ({
-  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
-  boxShadow: '0 3px 5px 2px rgba(139, 69, 19, .3)',
+  background: `linear-gradient(45deg, var(--amplify-colors-font-interactive) 30%, var(--amplify-colors-font-primary) 90%)`,
+  boxShadow: `0 3px 5px 2px rgba(139, 69, 19, .3)`,
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -45,8 +45,8 @@ const StyledAppBar = styled(MuiAppBar, {
 
 const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
   '& .MuiDrawer-paper': {
-    backgroundColor: theme.palette.background.paper,
-    borderRight: `1px solid ${theme.palette.primary.light}`,
+    backgroundColor: 'var(--amplify-colors-background-primary)',
+    borderRight: `1px solid var(--amplify-colors-border-primary)`,
   },
 }));
 
@@ -111,20 +111,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <MenuIcon />
             </IconButton>
-            <RestaurantIcon sx={{ mr: 1, color: '#F4C430' }} />
-            <SportsEsportsIcon sx={{ mr: 1, color: '#F4C430' }} />
+            <RestaurantIcon sx={{ mr: 1, color: 'var(--amplify-colors-background-primary)' }} />
+            <SportsEsportsIcon sx={{ mr: 1, color: 'var(--amplify-colors-background-primary)' }} />
             <Typography
               variant="h6"
               noWrap
               component="div"
               sx={{ 
                 display: { xs: 'none', sm: 'block' },
-                color: '#FFFFFF',
+                color: 'var(--amplify-colors-background-primary)',
                 fontWeight: 'bold',
                 textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
               }}
             >
-              Game Match - Thanksgiving Edition
+              Game Match - HAPPY THANKSGIVING!
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -133,7 +133,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    color: '#FFFFFF',
+                    color: 'var(--amplify-colors-background-primary)',
                     textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
                   }}
                 >
@@ -145,7 +145,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   aria-controls="menu-appbar"
                   aria-haspopup="true"
                   onClick={handleMenu}
-                  sx={{ color: '#F4C430' }}
+                  sx={{ color: 'var(--amplify-colors-background-primary)' }}
                 >
                   <AccountCircle />
                 </IconButton>
@@ -163,6 +163,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   }}
                   open={Boolean(anchorEl)}
                   onClose={handleClose}
+                  PaperProps={{
+                    sx: {
+                      backgroundColor: 'var(--amplify-colors-background-primary)',
+                      border: '1px solid var(--amplify-colors-border-primary)',
+                      '& .MuiMenuItem-root': {
+                        color: 'var(--amplify-colors-font-primary)',
+                        '&:hover': {
+                          backgroundColor: 'var(--amplify-colors-font-secondary)',
+                          color: 'var(--amplify-colors-background-primary)',
+                        },
+                      },
+                    },
+                  }}
                 >
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
@@ -185,7 +198,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         open={open}
       >
         <DrawerHeader>
-          <Typography variant="h6" color="primary" sx={{ flexGrow: 1, ml: 2 }}>
+          <Typography variant="h6" color="var(--amplify-colors-font-primary)" sx={{ flexGrow: 1, ml: 2 }}>
             🦃 Menu
           </Typography>
           <IconButton onClick={handleDrawerClose}>
@@ -212,7 +225,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             }),
             marginLeft: 0,
           }),
-          backgroundColor: 'background.default',
+          backgroundColor: 'var(--amplify-colors-background-secondary)',
         }}
       >
         <DrawerHeader />
@@ -220,10 +233,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           elevation={3} 
           sx={{ 
             p: 2,
-            backgroundColor: 'background.paper',
+            backgroundColor: 'var(--amplify-colors-background-primary)',
             borderRadius: 2,
             border: '1px solid',
-            borderColor: 'primary.light',
+            borderColor: 'var(--amplify-colors-border-primary)',
           }}
         >
           {children}

@@ -83,6 +83,7 @@ function HomeContent() {
     { 
       field: 'name', 
       headerName: 'Name', 
+      headerClassName: 'amplify-theme-header',
       width: 150,
       flex: 1,
       minWidth: 120,
@@ -94,28 +95,32 @@ function HomeContent() {
     },
     { 
       field: 'description', 
-      headerName: 'Description', 
+      headerName: 'Description',
+      headerClassName: 'amplify-theme-header', 
       width: 300,
       flex: 2,
       minWidth: 200,
     },
     { 
       field: 'status', 
-      headerName: 'Status', 
+      headerName: 'Status',
+      headerClassName: 'amplify-theme-header', 
       width: 120,
       flex: 0.8,
       minWidth: 100 
     },
     { 
       field: 'owner', 
-      headerName: 'Creator', 
+      headerName: 'Creator',
+      headerClassName: 'amplify-theme-header', 
       width: 200,
       flex: 1,
       minWidth: 150,
     },
     { 
       field: 'updatedAt', 
-      headerName: 'Created', 
+      headerName: 'Created',
+      headerClassName: 'amplify-theme-header', 
       width: 150,
       flex: 1,
       minWidth: 120,
@@ -200,10 +205,22 @@ function HomeContent() {
                   style={{ height: 400 }}
                   disableColumnMenu
                   sx={{
+                    '& .amplify-theme-header': {
+                      backgroundColor: 'var(--amplify-colors-background-secondary)',
+                      color: 'var(--amplify-colors-background-primary)',
+                      fontWeight: 600,
+                      '&:focus, &:focus-within': {
+                        outline: 'none',
+                      },
+                    },
                     '& .MuiDataGrid-cell': {
                       whiteSpace: 'normal',
                       lineHeight: 'normal',
                       padding: '8px',
+                      color: 'var(--amplify-colors-font-primary)',
+                    },
+                    '& .MuiDataGrid-row:hover': {
+                      color: 'var(--amplify-colors-font-primary)',
                     },
                     '@media (max-width: 600px)': {
                       '& .MuiDataGrid-cell': {
