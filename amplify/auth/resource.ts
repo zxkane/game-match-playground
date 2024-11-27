@@ -1,7 +1,10 @@
+import { isGoogleAuthEnabled } from '@/constant';
 import { defineAuth, secret } from '@aws-amplify/backend';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const productionDomain = process.env.PRODUCTION_DOMAIN;
+
+const baseUrl = isDevelopment ? 'http://localhost:3000' : `https://${productionDomain}`;
 
 export const auth = defineAuth({
   loginWith: {
@@ -13,20 +16,11 @@ export const auth = defineAuth({
         scopes: ['email', 'profile', 'openid']
       },
       callbackUrls: [
-        ...(isDevelopment ? [
-          'http://localhost:3000/',
-          'http://localhost:3000/api/auth/callback/google'
-        ] : [
-          `https://${productionDomain}/`,
-          `https://${productionDomain}/api/auth/callback/google`
-        ])
+        `${baseUrl}/`,
+        ...(isGoogleAuthEnabled ? [`${baseUrl}/api/auth/callback/google`] : [])
       ],
       logoutUrls: [
-        ...(isDevelopment ? [
-          'http://localhost:3000/'
-        ] : [
-          `https://${productionDomain}/`
-        ])
+        `${baseUrl}/`
       ]
     }
   }

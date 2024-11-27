@@ -12,6 +12,7 @@ import { UserProvider, useUser } from '../context/UserContext';
 import BreadcrumbsComponent from '../components/BreadcrumbsComponent';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
+import { isGoogleAuthEnabled } from '../constant';
 
 const client = generateClient<Schema>();
 
@@ -26,9 +27,18 @@ type Game = {
 
 function SignInHeader() {
   return (
-    <div className="flex flex-col items-center justify-center h-full mb-4">
-      <h3 className="text-xl font-semibold">Sign in to Game Match App</h3>
-      <p className="text-sm text-gray-600">Use your email or Google account</p>
+    <div className="flex flex-col items-center justify-center"
+         style={{ 
+           padding: '1.5rem 1rem 1rem'
+         }}>
+      <h3 className="text-xl font-semibold mb-1"
+          style={{ color: 'var(--amplify-colors-font-primary)' }}>
+        Sign in to Game Match App
+      </h3>
+      <p className="text-sm"
+         style={{ color: 'var(--amplify-colors-font-secondary)' }}>
+        {isGoogleAuthEnabled ? 'Use your email or Google account' : 'Use your email to sign in'}
+      </p>
     </div>
   );
 }
@@ -124,7 +134,7 @@ function HomeContent() {
           loginMechanisms={['email']}
           signUpAttributes={['email']}
           initialState="signIn"
-          socialProviders={['google']}
+          socialProviders={isGoogleAuthEnabled ? ['google'] : []}
         />
       </div>
     );
