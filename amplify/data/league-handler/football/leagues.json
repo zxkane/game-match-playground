@@ -1,0 +1,93 @@
+[
+  {
+    "country": {
+      "name": "England",
+      "code": "GB-ENG",
+      "flag": "https://media.api-sports.io/flags/gb-eng.svg"
+    },
+    "league": {
+      "id": 39,
+      "name": "Premier League",
+      "type": "League",
+      "logo": "https://media.api-sports.io/football/leagues/39.png"
+    }
+  },
+  {
+    "country": {
+      "name": "Spain",
+      "code": "ES",
+      "flag": "https://media.api-sports.io/flags/es.svg"
+    },
+    "league": {
+      "id": 140,
+      "name": "La Liga",
+      "type": "League",
+      "logo": "https://media.api-sports.io/football/leagues/140.png"
+    }
+  },
+  {
+    "country": {
+      "name": "Germany",
+      "code": "DE",
+      "flag": "https://media.api-sports.io/flags/de.svg"
+    },
+    "league": {
+      "id": 78,
+      "name": "Bundesliga",
+      "type": "League",
+      "logo": "https://media.api-sports.io/football/leagues/78.png"
+    }
+  },
+  {
+    "country": {
+      "name": "Italy",
+      "code": "IT",
+      "flag": "https://media.api-sports.io/flags/it.svg"
+    },
+    "league": {
+      "id": 135,
+      "name": "Serie A",
+      "type": "League",
+      "logo": "https://media.api-sports.io/football/leagues/135.png"
+    }
+  },
+  {
+    "country": {
+      "name": "France",
+      "code": "FR",
+      "flag": "https://media.api-sports.io/flags/fr.svg"
+    },
+    "league": {
+      "id": 61,
+      "name": "Ligue 1",
+      "type": "League",
+      "logo": "https://media.api-sports.io/football/leagues/61.png"
+    }
+  },
+  {
+    "country": {
+      "name": "Portugal",
+      "code": "PT",
+      "flag": "https://media.api-sports.io/flags/pt.svg"
+    },
+    "league": {
+      "id": 94,
+      "name": "Primeira Liga",
+      "type": "League",
+      "logo": "https://media.api-sports.io/football/leagues/94.png"
+    }
+  },
+  {
+    "country": {
+      "name": "Netherlands",
+      "code": "NL",
+      "flag": "https://media.api-sports.io/flags/nl.svg"
+    },
+    "league": {
+      "id": 88,
+      "name": "Eredivisie",
+      "type": "League",
+      "logo": "https://media.api-sports.io/football/leagues/88.png"
+    }
+  }
+]

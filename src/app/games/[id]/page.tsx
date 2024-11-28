@@ -14,6 +14,12 @@ import {
   Chip,
   Tooltip,
   ButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
 } from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
 import RequireAuth from '../../../components/RequireAuth';
@@ -27,6 +33,8 @@ import UpdateIcon from '@mui/icons-material/Update';
 import PublishIcon from '@mui/icons-material/Publish';
 import DoneIcon from '@mui/icons-material/Done';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import AddIcon from '@mui/icons-material/Add';
+import Image from 'next/image';
 
 const client = generateClient<Schema>();
 
@@ -38,6 +46,10 @@ export default function GameDetail({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [openAddTeamDialog, setOpenAddTeamDialog] = useState(false);
+  const [newTeam, setNewTeam] = useState({ team: '', player: '' });
+  const [leagues, setLeagues] = useState<Schema['League']['type'][]>([]);
+  const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
 
   const updateGameStatus = async (gameId: string, status: GameStatus) => {
     try {
@@ -120,6 +132,35 @@ export default function GameDetail({ params }: { params: { id: string } }) {
       console.error('Error deleting game:', error);
       setAlertMessage({ type: 'error', message: 'Failed to delete game' });
     }
+  };
+
+  const fetchLeagues = async () => {
+    try {
+      setIsLoadingLeagues(true);
+      const result = await client.queries.leagues({});
+      if (result.data) {
+        setLeagues(result.data.filter((league): league is Schema['League']['type'] => 
+          league != null && league.league != null
+        ));
+      }
+    } catch (error) {
+      console.error('Error fetching leagues:', error);
+      setAlertMessage({ type: 'error', message: 'Failed to fetch leagues' });
+    } finally {
+      setIsLoadingLeagues(false);
+    }
+  };
+
+  const handleAddTeamClick = async () => {
+    await fetchLeagues();
+    setOpenAddTeamDialog(true);
+  };
+
+  const handleAddTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement team addition logic
+    setOpenAddTeamDialog(false);
+    setNewTeam({ team: '', player: '' });
   };
 
   return (
@@ -228,15 +269,112 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                       <strong>Owner:</strong> {game.owner}
                     </Typography>
                   </div>
-                  <div className="flex justify-end space-x-2 pt-4">
+                  </Paper>
+                  <Paper className="mt-4">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <Typography variant="h4" className="text-gray-800">
+                          Teams
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={handleAddTeamClick}
+                          startIcon={isLoadingLeagues ? <CircularProgress size={20} /> : <AddIcon />}
+                          disabled={isLoadingLeagues}
+                        >
+                          {isLoadingLeagues ? 'Loading...' : 'Add New Team'}
+                        </Button>
+                        <Dialog open={openAddTeamDialog} onClose={() => setOpenAddTeamDialog(false)}>
+                          <DialogTitle>Add New Team</DialogTitle>
+                          <DialogContent>
+                            {isLoadingLeagues ? (
+                              <CircularProgress />
+                            ) : (
+                              <form onSubmit={handleAddTeam} className="space-y-4 pt-2">
+                                <TextField
+                                  select
+                                  fullWidth
+                                  label="Select League"
+                                  value={newTeam.team}
+                                  onChange={(e) => setNewTeam({...newTeam, team: e.target.value})}
+                                  required
+                                >
+                                  {leagues.map((league) => (
+                                    <MenuItem 
+                                      key={league.league?.id} 
+                                      value={league.league?.name}
+                                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                                    >
+                                      {league.country?.flag && (
+                                        <Image
+                                          src={league.country.flag}
+                                          alt={`${league.country?.name} flag`}
+                                          width={24}
+                                          height={16}
+                                          loading="lazy"
+                                          style={{ objectFit: 'contain' }}
+                                        />
+                                      )}
+                                      {league.country?.name} - 
+                                      {league.league?.logo && (
+                                        <Image
+                                          src={league.league.logo}
+                                          alt={`${league.league?.name} logo`}
+                                          width={20}
+                                          height={20}
+                                          loading="lazy"
+                                          style={{ objectFit: 'contain' }}
+                                        />
+                                      )}
+                                      {league.league?.name}
+                                    </MenuItem>
+                                  ))}
+                                </TextField>
+                                
+                                <TextField
+                                  fullWidth
+                                  label="Player Name"
+                                  value={newTeam.player}
+                                  onChange={(e) => setNewTeam({...newTeam, player: e.target.value})}
+                                />
+                              </form>
+                            )}
+                          </DialogContent>
+                          <DialogActions>
+                            <Button onClick={() => setOpenAddTeamDialog(false)}>Cancel</Button>
+                            <Button onClick={handleAddTeam} variant="contained" disabled={isLoadingLeagues}>
+                              Add Team
+                            </Button>
+                          </DialogActions>
+                        </Dialog>
+                      </div>
+                      {game.teams && game.teams.length > 0 ? (
+                        game.teams.map((teamPlayer, index) => (
+                          <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                            <Typography variant="body1">
+                              <strong>Team:</strong> {teamPlayer?.team}
+                            </Typography>
+                            <Typography variant="body1">
+                              <strong>Player:</strong> {teamPlayer?.player}
+                            </Typography>
+                          </div>
+                        ))
+                      ) : (
+                          <Typography variant="body2" className="text-gray-600">
+                            No teams available.
+                          </Typography>
+                      )}
+                    </div>
+                  </Paper>
+                  <div className="flex justify-end space-x-2 mt-4">
                     <Button
                       variant="outlined"
                       onClick={() => router.push('/games')}
                     >
-                        Back to Games
-                      </Button>
-                    </div>
-                  </Paper>
+                      Back to Games
+                    </Button>
+                  </div>
                 </>
               ) : null}
             </div>
