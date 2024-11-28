@@ -8,16 +8,22 @@ interface RequireAuthProps {
 
 const RequireAuth = ({ children }: RequireAuthProps) => {
   const router = useRouter();
-  const { user } = useAuthenticator((context) => [context.user]);
+  const { user, authStatus } = useAuthenticator((context) => [context.user, context.authStatus]);
 
   useEffect(() => {
-    if (!user) {
+    if (authStatus === 'authenticated' && !user) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, router, authStatus]);
 
-  if (!user) {
-    return null; // Optionally, you can return a loading spinner or a placeholder
+  // Wait for auth status to be determined
+  if (authStatus === 'configuring' || authStatus === 'unauthenticated') {
+    return null; // Or return a loading spinner
+  }
+
+  // Only check user after auth status is determined
+  if (authStatus === 'authenticated' && !user) {
+    return null;
   }
 
   return <>{children}</>;

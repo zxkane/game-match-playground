@@ -13,7 +13,7 @@ const BreadcrumbsComponent: React.FC<BreadcrumbsComponentProps> = ({ links, curr
           {link.label}
         </MuiLink>
       ))}
-      <Typography sx={{ color: 'text.primary' }}>{current}</Typography>
+      <Typography>{current}</Typography>
     </Breadcrumbs>
   );
 };

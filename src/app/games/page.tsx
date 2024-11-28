@@ -6,7 +6,7 @@ import { Schema } from '../../../amplify/data/resource';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { UserProvider, useUser } from '../../context/UserContext';
+import { UserProvider } from '../../context/UserContext';
 import BreadcrumbsComponent from '../../components/BreadcrumbsComponent';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
@@ -14,14 +14,7 @@ import RequireAuth from '../../components/RequireAuth';
 
 const client = generateClient<Schema>();
 
-type Game = {
-  id: string | null;
-  name: string;
-  owner: string;
-  description: string | null;
-  status: 'draft' | 'active' | 'completed' | null;
-  updatedAt: string;
-};
+type Game = Omit<Schema['Game']['type'], 'createdAt' | 'players' | 'rounds'>;
 
 export default function Games() {
   const router = useRouter();
@@ -35,7 +28,12 @@ export default function Games() {
       try {
         setIsLoading(true);
         const gamesResult = await client.models.Game.list({
-          selectionSet: ['id', 'name', 'owner', 'description', 'status', 'updatedAt']
+          selectionSet: ['id', 'name', 'owner', 'description', 'status', 'updatedAt'],
+          filter: {
+            status: {
+              ne: 'deleted'
+            }
+          }
         });
         setGames(gamesResult.data || []);
       } catch (error) {
@@ -115,10 +113,7 @@ export default function Games() {
                 {games.length > 0 && (
                   <Button
                     variant="contained"
-                    sx={{ 
-                      mt: 2,
-                      backgroundColor: 'var(--amplify-colors-background-secondary)',
-                    }}
+                    sx={{ mt: 2 }}
                     onClick={() => router.push('/games/new')}
                     startIcon={<AddIcon />}
                   >
@@ -140,10 +135,7 @@ export default function Games() {
                     </Typography>
                     <Button
                       variant="contained"
-                      sx={{ 
-                        mt: 2,
-                        backgroundColor: 'var(--amplify-colors-background-secondary)',
-                      }}
+                      sx={{ mt: 2 }}
                       onClick={() => router.push('/games/new')}
                       startIcon={<AddIcon />}
                     >
@@ -163,30 +155,6 @@ export default function Games() {
                       }
                       style={{ height: 400 }}
                       disableColumnMenu
-                      sx={{
-                        '& .amplify-theme-header': {
-                          backgroundColor: 'var(--amplify-colors-background-secondary)',
-                          color: 'var(--amplify-colors-background-primary)',
-                          fontWeight: 600,
-                          '&:focus, &:focus-within': {
-                            outline: 'none',
-                          },
-                        },
-                        '& .MuiDataGrid-cell': {
-                          whiteSpace: 'normal',
-                          lineHeight: 'normal',
-                          padding: '8px',
-                          color: 'var(--amplify-colors-font-primary)',
-                        },
-                        '& .MuiDataGrid-row:hover': {
-                          color: 'var(--amplify-colors-font-primary)',
-                        },
-                        '@media (max-width: 600px)': {
-                          '& .MuiDataGrid-cell': {
-                            fontSize: '0.875rem',
-                          },
-                        },
-                      }}
                     />
                   </div>
                 )}

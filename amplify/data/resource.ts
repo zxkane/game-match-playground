@@ -1,7 +1,7 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 
 const schema = a.schema({
-  GameStatus: a.enum(['draft', 'active', 'completed']),
+  GameStatus: a.enum(['draft', 'active', 'completed', 'deleted']),
   Game: a.model({
     id: a.id(),
     name: a.string().required(),
@@ -12,7 +12,7 @@ const schema = a.schema({
     status: a.ref('GameStatus'),
   })
   .identifier(['id'])
-  .disableOperations(['create', 'update'])
+  .disableOperations(['create', 'update', 'delete'])
   .secondaryIndexes((index) => [
     index('owner').sortKeys(['updatedAt']).queryField('listByOwner')
   ])
@@ -31,7 +31,21 @@ const schema = a.schema({
     .handler(a.handler.custom({
       dataSource: a.ref('Game'),
       entry: './create-game-handler.js'
-    }))
+    })),
+
+  updateGameStatus: a.mutation()
+    .arguments({
+      id: a.string().required(),
+      newStatus: a.enum(['active', 'completed', 'deleted']),
+    })
+    .returns(a.ref('Game'))
+    .authorization(allow => [
+      allow.authenticated(),
+    ])
+    .handler(a.handler.custom({
+      dataSource: a.ref('Game'),
+      entry: './update-game-status-handler.js'
+    })),
 });
 
 export type Schema = ClientSchema<typeof schema>;
