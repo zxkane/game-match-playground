@@ -48,8 +48,11 @@ export default function GameDetail({ params }: { params: { id: string } }) {
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [openAddTeamDialog, setOpenAddTeamDialog] = useState(false);
   const [newTeam, setNewTeam] = useState({ team: '', player: '' });
-  const [leagues, setLeagues] = useState<Schema['League']['type'][]>([]);
+  const [leagues, setLeagues] = useState<Schema['LeagueCountry']['type'][]>([]);
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
+  const [selectedLeagueDetails, setSelectedLeagueDetails] = useState<Schema['League']['type'] | null>(null);
+  const [isLoadingLeagueDetails, setIsLoadingLeagueDetails] = useState(false);
+  const [selectedLeague, setSelectedLeague] = useState<string>('');
 
   const updateGameStatus = async (gameId: string, status: GameStatus) => {
     try {
@@ -139,7 +142,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
       setIsLoadingLeagues(true);
       const result = await client.queries.leagues({});
       if (result.data) {
-        setLeagues(result.data.filter((league): league is Schema['League']['type'] => 
+        setLeagues(result.data.filter((league): league is Schema['LeagueCountry']['type'] => 
           league != null && league.league != null
         ));
       }
@@ -161,6 +164,21 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     // TODO: Implement team addition logic
     setOpenAddTeamDialog(false);
     setNewTeam({ team: '', player: '' });
+  };
+
+  const fetchLeagueDetails = async (leagueId: string) => {
+    try {
+      setIsLoadingLeagueDetails(true);
+      const result = await client.queries.league({ id: leagueId });
+      if (result.data) {
+        setSelectedLeagueDetails(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching league details:', error);
+      setAlertMessage({ type: 'error', message: 'Failed to fetch league details' });
+    } finally {
+      setIsLoadingLeagueDetails(false);
+    }
   };
 
   return (
@@ -285,7 +303,10 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                         >
                           {isLoadingLeagues ? 'Loading...' : 'Add New Team'}
                         </Button>
-                        <Dialog open={openAddTeamDialog} onClose={() => setOpenAddTeamDialog(false)}>
+                        <Dialog 
+                          open={openAddTeamDialog} 
+                          onClose={() => setOpenAddTeamDialog(false)}
+                        >
                           <DialogTitle>Add New Team</DialogTitle>
                           <DialogContent>
                             {isLoadingLeagues ? (
@@ -296,42 +317,125 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                                   select
                                   fullWidth
                                   label="Select League"
-                                  value={newTeam.team}
-                                  onChange={(e) => setNewTeam({...newTeam, team: e.target.value})}
+                                  value={selectedLeague}
+                                  onChange={(e) => {
+                                    setSelectedLeague(e.target.value);
+                                    setNewTeam({...newTeam, team: ''});
+                                    const selectedLeague = leagues.find(l => l.league?.name === e.target.value);
+                                    if (selectedLeague?.league?.id) {
+                                      fetchLeagueDetails(selectedLeague.league.id.toString());
+                                    }
+                                  }}
                                   required
+                                  sx={{ mb: 2 }}
+                                  SelectProps={{
+                                    MenuProps: {
+                                      PaperProps: {
+                                        style: {
+                                          maxHeight: 300,
+                                          width: 'auto',
+                                        }
+                                      }
+                                    }
+                                  }}
                                 >
                                   {leagues.map((league) => (
                                     <MenuItem 
                                       key={league.league?.id} 
                                       value={league.league?.name}
-                                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                                      sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: 1,
+                                        width: 'auto',
+                                        minWidth: '100%'
+                                      }}
                                     >
-                                      {league.country?.flag && (
-                                        <Image
-                                          src={league.country.flag}
-                                          alt={`${league.country?.name} flag`}
-                                          width={24}
-                                          height={16}
-                                          loading="lazy"
-                                          style={{ objectFit: 'contain' }}
-                                        />
-                                      )}
-                                      {league.country?.name} - 
-                                      {league.league?.logo && (
-                                        <Image
-                                          src={league.league.logo}
-                                          alt={`${league.league?.name} logo`}
-                                          width={20}
-                                          height={20}
-                                          loading="lazy"
-                                          style={{ objectFit: 'contain' }}
-                                        />
-                                      )}
-                                      {league.league?.name}
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                                        {league.country?.flag && (
+                                          <Image
+                                            src={league.country.flag}
+                                            alt={`${league.country?.name} flag`}
+                                            width={24}
+                                            height={16}
+                                            loading="lazy"
+                                            style={{ objectFit: 'contain', flexShrink: 0 }}
+                                          />
+                                        )}
+                                        <span style={{ whiteSpace: 'nowrap' }}>{league.country?.name} - </span>
+                                        {league.league?.logo && (
+                                          <Image
+                                            src={league.league.logo}
+                                            alt={`${league.league?.name} logo`}
+                                            width={20}
+                                            height={20}
+                                            loading="lazy"
+                                            style={{ objectFit: 'contain', flexShrink: 0 }}
+                                          />
+                                        )}
+                                        <span style={{ whiteSpace: 'nowrap' }}>{league.league?.name}</span>
+                                      </div>
                                     </MenuItem>
                                   ))}
                                 </TextField>
-                                
+
+                                {isLoadingLeagueDetails ? (
+                                  <div className="flex justify-center p-4">
+                                    <CircularProgress size={24} />
+                                  </div>
+                                ) : selectedLeagueDetails?.teams ? (
+                                  <TextField
+                                    select
+                                    fullWidth
+                                    label="Select Team"
+                                    value={newTeam.team}
+                                    onChange={(e) => setNewTeam({...newTeam, team: e.target.value})}
+                                    required
+                                    SelectProps={{
+                                      MenuProps: {
+                                        PaperProps: {
+                                          style: {
+                                            maxHeight: 300,
+                                            width: 'auto',
+                                          }
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    {selectedLeagueDetails.teams.map((team: any) => (
+                                      team && (
+                                        <MenuItem 
+                                          key={team.id} 
+                                        value={team.name}
+                                        sx={{ 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          gap: 1,
+                                          width: 'auto',
+                                          minWidth: '100%'
+                                        }}
+                                      >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                                          {team.logo && (
+                                            <Image
+                                              src={team.logo}
+                                              alt={`${team.name} logo`}
+                                              width={20}
+                                              height={20}
+                                              loading="lazy"
+                                              style={{ objectFit: 'contain', flexShrink: 0 }}
+                                            />
+                                          )}
+                                          <span style={{ whiteSpace: 'nowrap' }}>
+                                            {team.name}
+                                          </span>
+                                          </div>
+                                      </MenuItem>
+                                    )
+                                    ))}
+                                  </TextField>
+                                ) : null}
+
                                 <TextField
                                   fullWidth
                                   label="Player Name"

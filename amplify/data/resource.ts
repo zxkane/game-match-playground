@@ -1,7 +1,17 @@
-import { a, defineData, type ClientSchema, defineFunction } from '@aws-amplify/backend';
+import { a, defineData, type ClientSchema, defineFunction, secret } from '@aws-amplify/backend';
 
 const leaguesHandler = defineFunction({
-  entry: './league-handler/handler.ts'
+  entry: './league-handler/leagues.ts',
+  runtime: 20,
+})
+
+export const leagueHandler = defineFunction({
+  entry: './league-handler/league.ts',
+  runtime: 20,
+  timeoutSeconds: 30,
+  environment: {
+    RAPID_API_KEY: secret('RAPID_API_KEY'),
+  }
 })
 
 const schema = a.schema({
@@ -56,7 +66,7 @@ const schema = a.schema({
       entry: './update-game-status-handler.js'
     })),
 
-  League: a.customType({
+  LeagueCountry: a.customType({
     country: a.customType({
       name: a.string().required(),
       code: a.string().required(),
@@ -74,9 +84,43 @@ const schema = a.schema({
     .arguments({
       countryCode: a.string(),
     })
-    .returns(a.ref('League').array())
+    .returns(a.ref('LeagueCountry').array())
     .authorization(allow => [allow.authenticated()])
     .handler(a.handler.function(leaguesHandler)),
+
+  Team: a.customType({
+    id: a.string().required(),
+    name: a.string().required(),
+    code: a.string(),
+    country: a.string().required(),
+    national: a.boolean().required(),
+    logo: a.string(),
+    founded: a.integer(),
+    venue: a.customType({
+      id: a.integer().required(),
+      name: a.string().required(),
+      address: a.string().required(),
+      city: a.string().required(),
+      capacity: a.integer().required(),
+      surface: a.string().required(),
+      image: a.string().required(),
+    }),
+  }),
+
+  League: a.customType({
+    id: a.string().required(),
+    leagueCountry: a.ref('LeagueCountry'),
+    teams: a.ref('Team').array(),
+    season: a.integer(),
+  }),
+
+  league: a.query()
+    .arguments({
+      id: a.string().required(),
+    })
+    .returns(a.ref('League'))
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.function(leagueHandler)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
