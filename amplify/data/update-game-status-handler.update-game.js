@@ -1,9 +1,25 @@
 import { util } from '@aws-appsync/utils';
 
 export function request(ctx) {
-  const { id, newStatus } = ctx.args;
-  const owner = ctx.identity.claims.email || ctx.identity.username;
+  const { id, status, teams, newStatus } = ctx.prev.result;
   
+  const validTransitions = {
+    'draft': ['active', 'deleted'],
+    'active': ['completed', 'deleted'],
+    'completed': ['deleted'],
+    'deleted': []
+  };
+
+  const allowedTransitions = validTransitions[status] || [];
+  if (!allowedTransitions.includes(newStatus)) {
+    util.error(`Invalid status transition from ${status} to ${newStatus}`, 'ValidationError');
+  }
+
+  // If transitioning to active, check team count
+  if (newStatus === 'active' && (!teams || teams.length < 2)) {
+    util.error('Cannot set game to active with less than 2 teams', 'ValidationError');
+  }
+
   return {
     operation: 'UpdateItem',
     key: util.dynamodb.toMapValues({ id }),
@@ -29,22 +45,6 @@ export function response(ctx) {
   
   if (error) {
     util.error(error.message, error.type);
-  }
-  
-  // Validate status transitions
-  const validTransitions = {
-    'draft': ['active', 'deleted'],
-    'active': ['completed', 'deleted'],
-    'completed': ['deleted'],
-    'deleted': []
-  };
-  
-  const currentStatus = result.status;
-  const newStatus = ctx.args.newStatus;
-  const allowedTransitions = validTransitions[currentStatus] || [];
-  
-  if (!allowedTransitions.includes(newStatus)) {
-    util.error(`Invalid status transition from ${currentStatus} to ${newStatus}`);
   }
   
   return result;

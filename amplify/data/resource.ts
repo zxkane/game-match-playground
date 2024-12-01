@@ -17,7 +17,11 @@ export const leagueHandler = defineFunction({
 const schema = a.schema({
   GameStatus: a.enum(['draft', 'active', 'completed', 'deleted']),
   TeamPlayer: a.customType({
-    team: a.string().required(),
+    team: a.customType({
+      id: a.string().required(),
+      name: a.string().required(),
+      logo: a.string().required(),
+    }),
     player: a.string(),
   }),
   Game: a.model({
@@ -61,10 +65,59 @@ const schema = a.schema({
     .authorization(allow => [
       allow.authenticated(),
     ])
-    .handler(a.handler.custom({
-      dataSource: a.ref('Game'),
-      entry: './update-game-status-handler.js'
-    })),
+    .handler([
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './update-game-status-handler.get-game.js'
+      }),
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './update-game-status-handler.update-game.js'
+      })
+    ]),
+
+  addTeamToGame: a.mutation()
+    .arguments({
+      gameId: a.string().required(),
+      teamId: a.string().required(),
+      teamName: a.string().required(),
+      teamLogo: a.string().required(),
+      player: a.string(),
+    })
+    .returns(a.ref('Game'))
+    .authorization(allow => [
+      allow.authenticated(),
+    ])
+    .handler([
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './add-team-to-game-handler.get-game.js'
+      }),
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './add-team-to-game-handler.update-game.js'
+      })
+    ]),
+
+  removeTeamFromGame: a.mutation()
+    .arguments({
+      gameId: a.string().required(),
+      teamId: a.string().required(),
+    })
+    .returns(a.ref('Game'))
+    .authorization(allow => [
+      allow.authenticated(),
+    ])
+    .handler([
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './remove-team-from-game-handler.get-game.js'
+      }),
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './remove-team-from-game-handler.update-game.js'
+      })
+    ]),
 
   LeagueCountry: a.customType({
     country: a.customType({

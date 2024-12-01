@@ -20,6 +20,8 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+  Avatar,
+  IconButton,
 } from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
 import RequireAuth from '../../../components/RequireAuth';
@@ -35,6 +37,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import AddIcon from '@mui/icons-material/Add';
 import Image from 'next/image';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 const client = generateClient<Schema>();
 
@@ -68,12 +71,19 @@ export default function GameDetail({ params }: { params: { id: string } }) {
           'Authorization': session.tokens.idToken.toString(),
         }
       });
-      if (result.data) {
-        setGame(result.data);
-        return result.data;
+
+      if (result.errors) {
+        throw new Error(result.errors.map(e => e.message).join(', '));
       }
+
+      if (!result.data) {
+        throw new Error('No data returned from update operation');
+      }
+
+      setGame(result.data);
+      return result.data;
     } catch (error) {
-      throw new Error(`Failed to update game status: ${error}`);
+      throw error instanceof Error ? error : new Error('Failed to update game status');
     }
   };
 
@@ -83,7 +93,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
       const gameResult = await client.models.Game.get({
         id: params.id
       }, {
-        selectionSet: ['id', 'name', 'owner', 'description', 'status', 'createdAt', 'updatedAt']
+        selectionSet: ['id', 'name', 'owner', 'description', 'status', 'teams.*', 'createdAt', 'updatedAt']
       });
       
       if (!gameResult.data) {
@@ -91,7 +101,10 @@ export default function GameDetail({ params }: { params: { id: string } }) {
         return;
       }
       
-      setGame(gameResult.data);
+      setGame({
+        ...gameResult.data,
+        teams: gameResult.data.teams as unknown as Schema['TeamPlayer']['type'][]
+      });
     } catch (error) {
       console.error('Error fetching game:', error);
       setError('Game not found');
@@ -108,11 +121,17 @@ export default function GameDetail({ params }: { params: { id: string } }) {
 
   const handlePublishGame = async () => {
     try {
-      await updateGameStatus(params.id, 'active');
+      const result = await updateGameStatus(params.id, 'active');
+      if (!result) {
+        throw new Error('Failed to update game status');
+      }
       setAlertMessage({ type: 'success', message: 'Game published successfully' });
     } catch (error) {
       console.error('Error publishing game:', error);
-      setAlertMessage({ type: 'error', message: 'Failed to publish game' });
+      const errorMessage = error instanceof Error 
+        ? `Failed to publish game: ${error.message}`
+        : 'Failed to publish game: An unknown error occurred';
+      setAlertMessage({ type: 'error', message: errorMessage });
     }
   };
 
@@ -155,15 +174,49 @@ export default function GameDetail({ params }: { params: { id: string } }) {
   };
 
   const handleAddTeamClick = async () => {
+    setAlertMessage(null);
     await fetchLeagues();
     setOpenAddTeamDialog(true);
   };
 
   const handleAddTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement team addition logic
-    setOpenAddTeamDialog(false);
-    setNewTeam({ team: '', player: '' });
+    try {
+      const selectedTeam = selectedLeagueDetails?.teams?.find(team => team?.name === newTeam.team);
+      if (!selectedTeam) {
+        setAlertMessage({ type: 'error', message: 'Please select a team' });
+        return;
+      }
+
+      const result = await client.mutations.addTeamToGame({
+        gameId: params.id,
+        teamId: selectedTeam.id,
+        teamName: selectedTeam.name,
+        teamLogo: selectedTeam.logo || '',
+        player: newTeam.player || null
+      });
+
+      if (result.errors) {
+        throw new Error(result.errors.map(e => e.message).join(', '));
+      }
+
+      if (!result.data) {
+        throw new Error('No data returned from add team operation');
+      }
+
+      setGame(result.data);
+      setAlertMessage({ type: 'success', message: 'Team added successfully' });
+      setOpenAddTeamDialog(false);
+      setNewTeam({ team: '', player: '' });
+      setSelectedLeague('');
+      setSelectedLeagueDetails(null);
+    } catch (error) {
+      console.error('Error adding team:', error);
+      setAlertMessage({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Failed to add team' 
+      });
+    }
   };
 
   const fetchLeagueDetails = async (leagueId: string) => {
@@ -178,6 +231,23 @@ export default function GameDetail({ params }: { params: { id: string } }) {
       setAlertMessage({ type: 'error', message: 'Failed to fetch league details' });
     } finally {
       setIsLoadingLeagueDetails(false);
+    }
+  };
+
+  const handleRemoveTeam = async (teamId: string) => {
+    try {
+      const result = await client.mutations.removeTeamFromGame({
+        gameId: params.id,
+        teamId: teamId
+      });
+
+      if (result.data) {
+        setGame(result.data);
+        setAlertMessage({ type: 'success', message: 'Team removed successfully' });
+      }
+    } catch (error) {
+      console.error('Error removing team:', error);
+      setAlertMessage({ type: 'error', message: 'Failed to remove team' });
     }
   };
 
@@ -237,14 +307,21 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                     </div>
                       <ButtonGroup variant="contained" size="small">
                         {game.status === 'draft' && (
-                          <Tooltip title="Publish Game">
-                            <Button
-                              onClick={handlePublishGame}
-                              startIcon={<PublishIcon />}
-                              color="primary"
-                            >
-                              Publish
-                            </Button>
+                          <Tooltip title={
+                            (!game.teams || Object.keys(game.teams).length < 2) 
+                              ? "At least two teams are required to publish" 
+                              : "Publish Game"
+                          }>
+                            <span>
+                              <Button
+                                onClick={handlePublishGame}
+                                startIcon={<PublishIcon />}
+                                color="primary"
+                                disabled={!game.teams || Object.keys(game.teams).length < 2}
+                              >
+                                Publish
+                              </Button>
+                            </span>
                           </Tooltip>
                         )}
                         {game.status === 'active' && (
@@ -294,21 +371,32 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                         <Typography variant="h4" className="text-gray-800">
                           Teams
                         </Typography>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={handleAddTeamClick}
-                          startIcon={isLoadingLeagues ? <CircularProgress size={20} /> : <AddIcon />}
-                          disabled={isLoadingLeagues}
-                        >
-                          {isLoadingLeagues ? 'Loading...' : 'Add New Team'}
-                        </Button>
+                        {game.status === 'draft' && (
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleAddTeamClick}
+                            startIcon={isLoadingLeagues ? <CircularProgress size={20} /> : <AddIcon />}
+                            disabled={isLoadingLeagues}
+                          >
+                            {isLoadingLeagues ? 'Loading...' : 'Add New Team'}
+                          </Button>
+                        )}
                         <Dialog 
                           open={openAddTeamDialog} 
                           onClose={() => setOpenAddTeamDialog(false)}
                         >
                           <DialogTitle>Add New Team</DialogTitle>
                           <DialogContent>
+                            {alertMessage && (
+                              <Alert 
+                                severity={alertMessage.type} 
+                                onClose={() => setAlertMessage(null)}
+                                sx={{ mb: 2 }}
+                              >
+                                {alertMessage.message}
+                              </Alert>
+                            )}
                             {isLoadingLeagues ? (
                               <CircularProgress />
                             ) : (
@@ -327,14 +415,18 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                                     }
                                   }}
                                   required
-                                  sx={{ mb: 2 }}
-                                  SelectProps={{
-                                    MenuProps: {
-                                      PaperProps: {
-                                        style: {
-                                          maxHeight: 300,
-                                          width: 'auto',
-                                        }
+                                  sx={{ 
+                                    mb: 2,
+                                    minWidth: '400px',
+                                    '& .MuiSelect-select': {
+                                      width: '400px'
+                                    }
+                                  }}
+                                  slotProps={{
+                                    select: {
+                                      style: {
+                                        maxHeight: 300,
+                                        width: 'auto',
                                       }
                                     }
                                   }}
@@ -453,21 +545,83 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                           </DialogActions>
                         </Dialog>
                       </div>
-                      {game.teams && game.teams.length > 0 ? (
-                        game.teams.map((teamPlayer, index) => (
-                          <div key={index} className="p-4 border rounded-lg bg-gray-50">
-                            <Typography variant="body1">
-                              <strong>Team:</strong> {teamPlayer?.team}
-                            </Typography>
-                            <Typography variant="body1">
-                              <strong>Player:</strong> {teamPlayer?.player}
-                            </Typography>
-                          </div>
-                        ))
+                      {game.teams && Object.keys(game.teams).length > 0 ? (
+                        <div className="grid grid-cols-4 gap-1 sm:gap-4">
+                          {Object.values(game.teams).map((teamPlayer) => 
+                            teamPlayer && teamPlayer.team && (
+                              <Paper 
+                                key={teamPlayer.team.id} 
+                                className="p-1 sm:p-4 flex flex-col items-center text-center relative"
+                                elevation={1}
+                              >
+                                {game.status === 'draft' && (
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleRemoveTeam(teamPlayer.team!.id)}
+                                    sx={{ 
+                                      position: 'absolute',
+                                      right: 4,
+                                      top: 4,
+                                      opacity: 0.7,
+                                      '&:hover': {
+                                        opacity: 1
+                                      }
+                                    }}
+                                  >
+                                    <DeleteOutlineIcon fontSize="small" />
+                                  </IconButton>
+                                )}
+                                <Avatar
+                                  src={teamPlayer.team.logo}
+                                  alt={teamPlayer.team.name}
+                                  sx={{ 
+                                    width: { xs: 40, sm: 64 }, 
+                                    height: { xs: 40, sm: 64 },
+                                    mb: { xs: 0.5, sm: 1 }
+                                  }}
+                                  variant="rounded"
+                                >
+                                  {teamPlayer.team.name?.charAt(0)}
+                                </Avatar>
+                                <Typography 
+                                  variant="subtitle2" 
+                                  sx={{ 
+                                    fontWeight: 'bold',
+                                    width: '100%',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                                  }}
+                                >
+                                  {teamPlayer.team.name}
+                                </Typography>
+                                {teamPlayer.player && (
+                                  <Typography 
+                                    variant="caption" 
+                                    color="text.secondary"
+                                    sx={{
+                                      width: '100%',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      fontSize: { xs: '0.625rem', sm: '0.75rem' }
+                                    }}
+                                  >
+                                    {teamPlayer.player}
+                                  </Typography>
+                                )}
+                              </Paper>
+                            )
+                          )}
+                        </div>
                       ) : (
+                        <Paper className="p-6 text-center">
                           <Typography variant="body2" className="text-gray-600">
                             No teams available.
                           </Typography>
+                        </Paper>
                       )}
                     </div>
                   </Paper>
