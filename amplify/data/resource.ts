@@ -16,12 +16,13 @@ export const leagueHandler = defineFunction({
 
 const schema = a.schema({
   GameStatus: a.enum(['draft', 'active', 'completed', 'deleted']),
+  SimpleTeam: a.customType({
+    id: a.string().required(),
+    name: a.string().required(),
+    logo: a.string(),
+  }),
   TeamPlayer: a.customType({
-    team: a.customType({
-      id: a.string().required(),
-      name: a.string().required(),
-      logo: a.string().required(),
-    }),
+    team: a.ref('SimpleTeam').required(),
     player: a.string(),
   }),
   Game: a.model({
@@ -30,6 +31,7 @@ const schema = a.schema({
     description: a.string(),
     owner: a.string().required(),
     teams: a.ref('TeamPlayer').array(),
+    matches: a.ref('Match').array(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     status: a.ref('GameStatus'),
@@ -174,6 +176,66 @@ const schema = a.schema({
     .returns(a.ref('League'))
     .authorization(allow => [allow.authenticated()])
     .handler(a.handler.function(leagueHandler)),
+
+  Goal: a.customType({
+    teamId: a.string().required(),
+    playerName: a.string().required(),
+    minute: a.integer().required(),
+  }),
+
+  Match: a.customType({
+    homeTeamId: a.string().required(),
+    awayTeamId: a.string().required(),
+    homeScore: a.integer().required(),
+    awayScore: a.integer().required(),
+    date: a.string().required(),
+    createdAt: a.datetime().required(),
+  }),
+
+  addMatch: a.mutation()
+    .arguments({
+      gameId: a.string().required(),
+      homeTeamId: a.string().required(),
+      awayTeamId: a.string().required(),
+      homeScore: a.integer().required(),
+      awayScore: a.integer().required(),
+      date: a.string(),
+    })
+    .returns(a.ref('Game'))
+    .authorization(allow => [
+      allow.authenticated(),
+    ])
+    .handler([
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './add-match-handler.get-game.js'
+      }),
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './add-match-handler.update-game.js'
+      })
+    ]),
+
+  deleteMatch: a.mutation()
+    .arguments({
+      gameId: a.string().required(),
+      matchIndex: a.integer().required(),
+    })
+    .returns(a.ref('Game'))
+    .authorization(allow => [
+      allow.authenticated(),
+    ])
+    .handler([
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './delete-match-handler.get-game.js'
+      }),
+      a.handler.custom({
+        dataSource: a.ref('Game'),
+        entry: './delete-match-handler.update-game.js'
+      })
+    ]),
+
 });
 
 export type Schema = ClientSchema<typeof schema>;

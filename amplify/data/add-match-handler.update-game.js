@@ -1,39 +1,41 @@
 import { util } from '@aws-appsync/utils';
 
 export function request(ctx) {
-  const { gameId, teamId, teamName, teamLogo, player } = ctx.args;
+  const { gameId, homeTeamId, awayTeamId, homeScore, awayScore, date } = ctx.args;
   const game = ctx.prev.result;
 
-  const newTeamPlayer = {
-    team: {
-      id: teamId,
-      name: teamName,
-      logo: teamLogo
-    },
-    player: player || null
+  // Create new match object
+  const newMatch = {
+    homeTeamId,
+    awayTeamId,
+    homeScore,
+    awayScore,
+    date,
+    createdAt: util.time.nowISO8601(),
   };
 
-  const currentTeams = game.teams || [];
-  currentTeams.push(newTeamPlayer);
+  // Add match to game's matches array
+  const currentMatches = game.matches || [];
+  currentMatches.push(newMatch);
 
   return {
     operation: 'UpdateItem',
     key: util.dynamodb.toMapValues({ id: gameId }),
     update: {
-      expression: 'SET #teams = :teams, #updatedAt = :updatedAt',
+      expression: 'SET #matches = :matches, #updatedAt = :updatedAt',
       expressionNames: {
-        '#teams': 'teams',
+        '#matches': 'matches',
         '#updatedAt': 'updatedAt',
         '#status': 'status'
       },
       expressionValues: util.dynamodb.toMapValues({
-        ':teams': currentTeams,
+        ':matches': currentMatches,
         ':updatedAt': util.time.nowISO8601(),
-        ':draftStatus': 'draft'
-      }),
+        ':activeStatus': 'active'
+      })
     },
     condition: {
-      expression: '#status = :draftStatus'
+      expression: '#status = :activeStatus'
     }
   };
 }

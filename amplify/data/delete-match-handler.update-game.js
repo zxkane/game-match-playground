@@ -1,39 +1,32 @@
 import { util } from '@aws-appsync/utils';
 
 export function request(ctx) {
-  const { gameId, teamId, teamName, teamLogo, player } = ctx.args;
+  const { gameId } = ctx.args;
+  const { matchIndex } = ctx.stash;
   const game = ctx.prev.result;
 
-  const newTeamPlayer = {
-    team: {
-      id: teamId,
-      name: teamName,
-      logo: teamLogo
-    },
-    player: player || null
-  };
-
-  const currentTeams = game.teams || [];
-  currentTeams.push(newTeamPlayer);
+  // Get matches array and remove the match at specified index
+  const matches = [...(game.matches || [])];
+  matches.splice(matchIndex, 1);
 
   return {
     operation: 'UpdateItem',
     key: util.dynamodb.toMapValues({ id: gameId }),
     update: {
-      expression: 'SET #teams = :teams, #updatedAt = :updatedAt',
+      expression: 'SET #matches = :matches, #updatedAt = :updatedAt',
       expressionNames: {
-        '#teams': 'teams',
+        '#matches': 'matches',
         '#updatedAt': 'updatedAt',
         '#status': 'status'
       },
       expressionValues: util.dynamodb.toMapValues({
-        ':teams': currentTeams,
+        ':matches': matches,
         ':updatedAt': util.time.nowISO8601(),
-        ':draftStatus': 'draft'
-      }),
+        ':activeStatus': 'active'
+      })
     },
     condition: {
-      expression: '#status = :draftStatus'
+      expression: '#status = :activeStatus'
     }
   };
 }

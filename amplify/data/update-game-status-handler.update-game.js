@@ -31,11 +31,12 @@ export function request(ctx) {
       },
       expressionValues: util.dynamodb.toMapValues({
         ':newStatus': newStatus,
-        ':updatedAt': util.time.nowISO8601()
+        ':updatedAt': util.time.nowISO8601(),
+        ':currentStatus': status
       })
     },
     condition: {
-      expression: 'attribute_exists(id)'
+      expression: 'attribute_exists(id) AND #status = :currentStatus'
     }
   };
 }

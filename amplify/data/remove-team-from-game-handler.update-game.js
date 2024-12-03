@@ -18,13 +18,18 @@ export function request(ctx) {
       expression: 'SET #teams = :teams, #updatedAt = :updatedAt',
       expressionNames: {
         '#teams': 'teams',
-        '#updatedAt': 'updatedAt'
+        '#updatedAt': 'updatedAt',
+        '#status': 'status'
       },
       expressionValues: util.dynamodb.toMapValues({
         ':teams': updatedTeams,
-        ':updatedAt': util.time.nowISO8601()
-      })
-    }
+        ':updatedAt': util.time.nowISO8601(),
+        ':draftStatus': 'draft'
+      }),
+    },
+    condition: {
+      expression: '#status = :draftStatus'
+    },
   };
 }
 

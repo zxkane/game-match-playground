@@ -20,6 +20,13 @@ export function response(ctx) {
     util.error('Cannot add team to game - game is not in draft status');
   }
 
+  // Check if the team is already added
+  const { teamId } = ctx.args;
+  const teamExists = result.teams.some(teamPlayer => teamPlayer.team.id === teamId);
+  if (teamExists) {
+    util.error('Team is already added to the game');
+  }
+
   // Store the current game in stash for the next resolver
   ctx.stash.game = result;
   return result;
