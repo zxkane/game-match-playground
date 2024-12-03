@@ -18,6 +18,14 @@ import { useTheme } from '@aws-amplify/ui-react';
 import type {} from '@mui/x-data-grid/themeAugmentation';
 import { themeIcons } from '../app/layout';
 import { SITE_TITLE } from '../constant';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import { useRouter } from 'next/navigation';
+import ListItemButton from '@mui/material/ListItemButton';
 
 const drawerWidth = 240;
 
@@ -114,6 +122,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { userEmail } = useUser();
   const theme = useTheme();
   const { tokens } = theme;
+  const router = useRouter();
   
   // Get the current theme key
   const currentTheme = (process.env.NEXT_PUBLIC_SITE_THEME || 'christmas') as keyof typeof themeIcons;
@@ -143,6 +152,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       handleClose();
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  };
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+    // Optionally close drawer on mobile
+    if (window.innerWidth < 600) {
+      handleDrawerClose();
     }
   };
 
@@ -387,7 +404,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </IconButton>
           </DrawerHeader>
           <Divider />
-          {/* Add your drawer content here */}
+          <List>
+            <ListItemButton onClick={() => handleNavigation('/games')}>
+              <ListItemIcon>
+                <SportsEsportsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Games" />
+            </ListItemButton>
+            <ListItemButton onClick={() => handleNavigation('/transfers')}>
+              <ListItemIcon>
+                <SwapHorizIcon />
+              </ListItemIcon>
+              <ListItemText primary="Transfers" />
+            </ListItemButton>
+          </List>
         </StyledDrawer>
         <Box
           component="main"
