@@ -114,6 +114,25 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.className}>
+      <head>
+        <title>{SITE_TITLE} - {themeKey.charAt(0).toUpperCase() + themeKey.slice(1)}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Match and play games with friends. Create custom game tournaments and track scores in real-time." />
+        <meta name="keywords" content="game matching, tournaments, multiplayer games, score tracking" />
+        
+        {/* Open Graph / Social Media */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={SITE_TITLE} />
+        <meta property="og:description" content="Match and play games with friends. Create custom game tournaments and track scores in real-time." />
+        <meta property="og:site_name" content={SITE_TITLE} />
+        
+        {/* Theme Color */}
+        <meta name="theme-color" content={selectedTheme.tokens.colors.font.interactive.value} />
+        
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body>
         <ThemeProvider theme={selectedTheme}>
           <AmplifyProvider>
