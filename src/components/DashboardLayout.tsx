@@ -7,18 +7,17 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { signOut } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
-import { Divider, Paper } from '@mui/material';
+import { Divider, Paper, Avatar } from '@mui/material';
 import { useTheme } from '@aws-amplify/ui-react';
 import type {} from '@mui/x-data-grid/themeAugmentation';
+import { themeIcons } from '../app/layout';
+import { SITE_TITLE } from '../constant';
 
 const drawerWidth = 240;
 
@@ -69,11 +68,58 @@ const getCSSVariableValue = (variable: string) => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 };
 
+function stringToColor(string: string) {
+  let hash = 0;
+  let i;
+
+  /* eslint-disable no-bitwise */
+  for (i = 0; i < string.length; i += 1) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  let color = '#';
+
+  for (i = 0; i < 3; i += 1) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += `00${value.toString(16)}`.slice(-2);
+  }
+  /* eslint-enable no-bitwise */
+
+  return color;
+}
+
+function stringAvatar(email: string) {
+  const name = email.split('@')[0];
+  const words = name.split(/[._-]/);
+  const letters = words.length > 1 
+    ? `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase()
+    : name.length > 1 
+      ? name.slice(0, 2).toUpperCase() 
+      : name[0].toUpperCase();
+
+  return {
+    sx: {
+      width: 32,
+      height: 32,
+      bgcolor: stringToColor(email),
+      fontSize: '0.875rem'
+    },
+    children: letters,
+  };
+}
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [open, setOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { userEmail } = useUser();
-  const { tokens } = useTheme();
+  const theme = useTheme();
+  const { tokens } = theme;
+  
+  // Get the current theme key
+  const currentTheme = (process.env.NEXT_PUBLIC_SITE_THEME || 'christmas') as keyof typeof themeIcons;
+  
+  // Get theme-specific icons
+  const { primary: PrimaryIcon, secondary: SecondaryIcon } = themeIcons[currentTheme];
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -262,8 +308,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 <MenuIcon />
               </IconButton>
-              <RestaurantIcon className="header-icon" sx={{ mr: 1 }} />
-              <SportsEsportsIcon className="header-icon" sx={{ mr: 1 }} />
+              {PrimaryIcon && <PrimaryIcon className="header-icon" sx={{ mr: 1 }} />}
+              {SecondaryIcon && <SecondaryIcon className="header-icon" sx={{ mr: 1 }} />}
               <Typography
                 variant="h6"
                 noWrap
@@ -274,7 +320,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   fontWeight: 'bold'
                 }}
               >
-                Game Match - HAPPY THANKSGIVING!
+                {SITE_TITLE} - {currentTheme.toUpperCase()}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -283,6 +329,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <Typography 
                     variant="body2" 
                     className="header-email"
+                    sx={{ display: { xs: 'none', sm: 'block' } }}
                   >
                     {userEmail}
                   </Typography>
@@ -294,7 +341,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     onClick={handleMenu}
                     className="account-icon"
                   >
-                    <AccountCircle />
+                    <Avatar {...stringAvatar(userEmail)} />
                   </IconButton>
                   <Menu
                     id="menu-appbar"
@@ -333,7 +380,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           <DrawerHeader>
             <Typography variant="h6" color="var(--amplify-colors-font-primary)" sx={{ flexGrow: 1, ml: 2 }}>
-              🦃 Menu
+              {themeIcons[currentTheme].drawer.icon} {themeIcons[currentTheme].drawer.title}
             </Typography>
             <IconButton onClick={handleDrawerClose}>
               <ChevronLeftIcon />

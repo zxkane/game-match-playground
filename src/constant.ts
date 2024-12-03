@@ -1,2 +1,4 @@
-export const isGoogleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === 'true';
-export const oidcProvider = process.env.NEXT_PUBLIC_AUTH_OIDC_PROVIDER;
+export const SITE_TITLE = 'Game Playground';
+
+export const isGoogleAuthEnabled = process.env.NEXT_PUBLIC_EXTERNAL_PROVIDERS?.includes('google') || false;
+export const oidcProvider = process.env.NEXT_PUBLIC_OIDC_PROVIDER;

@@ -128,7 +128,8 @@ export default function GameDetail({ params }: { params: { id: string } }) {
       
       setGame({
         ...gameResult.data,
-        teams: gameResult.data.teams as unknown as Schema['TeamPlayer']['type'][]
+        teams: gameResult.data.teams as unknown as Schema['TeamPlayer']['type'][],
+        matches: Array.isArray(gameResult.data.matches) ? gameResult.data.matches : []
       });
     } catch (error) {
       console.error('Error fetching game:', error);
