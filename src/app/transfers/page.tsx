@@ -1,6 +1,6 @@
 'use client';
 
-import { Typography, Box } from '@mui/material';
+import { Typography } from '@mui/material';
 import BreadcrumbsComponent from '../../components/BreadcrumbsComponent';
 import DashboardLayout from '../../components/DashboardLayout';
 import RequireAuth from '../../components/RequireAuth';

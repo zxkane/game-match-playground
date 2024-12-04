@@ -47,7 +47,7 @@ const StyledAppBar = styled(MuiAppBar, {
   }),
 }));
 
-const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
+const StyledDrawer = styled(MuiDrawer)(() => ({
   '& .MuiDrawer-paper': {
     backgroundColor: 'var(--amplify-colors-background-primary)',
     borderRight: `1px solid var(--amplify-colors-border-primary)`,
@@ -56,10 +56,10 @@ const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
   },
 }));
 
-const DrawerHeader = styled('div')(({ theme }) => ({
+const DrawerHeader = styled('div')(() => ({
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(0, 1),
+  padding: '0 8px',
   minHeight: 64,
   justifyContent: 'space-between',
   width: '100%',
@@ -68,11 +68,6 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
-
-// Utility function to get CSS variable value
-const getCSSVariableValue = (variable: string) => {
-  return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-};
 
 function stringToColor(string: string) {
   let hash = 0;
@@ -147,17 +142,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     try {
       await signOut();
-      handleClose();
+      router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
-    }
-  };
-
-  const handleNavigation = (path: string) => {
-    router.push(path);
-    // Optionally close drawer on mobile
-    if (window.innerWidth < 600) {
-      handleDrawerClose();
     }
   };
 
@@ -305,7 +292,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const menuItems = [
     { text: 'Games', icon: <SportsEsportsIcon />, path: '/games' },
-    { text: 'Teams', icon: <GroupsIcon />, path: '/teams' },
+    { text: 'Transfers', icon: <GroupsIcon />, path: '/transfers' },
   ];
 
   return (

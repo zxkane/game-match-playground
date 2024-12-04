@@ -4,7 +4,7 @@ import { Authenticator, Flex, Divider, Button } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { isGoogleAuthEnabled, oidcProvider } from '../constant';
+import { isGoogleAuthEnabled, oidcProvider, SITE_TITLE } from '../constant';
 import { fetchUserAttributes, signInWithRedirect } from 'aws-amplify/auth';
 
 function SignInHeader() {
@@ -15,7 +15,7 @@ function SignInHeader() {
          }}>
       <h3 className="text-xl font-semibold mb-1"
           style={{ color: 'var(--amplify-colors-font-primary)' }}>
-        Sign in to Game Match App
+        Sign in to {SITE_TITLE}
       </h3>
       <p className="text-sm"
          style={{ color: 'var(--amplify-colors-font-secondary)' }}>
@@ -27,13 +27,7 @@ function SignInHeader() {
 
 export default function Home() {
   const [userEmail, setUserEmail] = useState<string>('');
-  const [identityProviders, setIdentityProviders] = useState<string[]>([]);
   const router = useRouter();
-
-  useEffect(() => {
-    const providers = process.env.NEXT_PUBLIC_EXTERNAL_PROVIDERS?.split(',') || [];
-    setIdentityProviders(providers);
-  }, []);
 
   useEffect(() => {
     const getUserEmail = async () => {

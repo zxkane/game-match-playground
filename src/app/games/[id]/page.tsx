@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateClient } from 'aws-amplify/api';
 import { Schema } from '../../../../amplify/data/resource';
@@ -112,7 +112,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     }
   };
 
-  const fetchGame = async () => {
+  const fetchGame = useCallback(async () => {
     try {
       setIsLoading(true);
       const gameResult = await client.models.Game.get({
@@ -137,13 +137,13 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id]);
 
   useEffect(() => {
     if (params.id) {
       fetchGame();
     }
-  }, [params.id]);
+  }, [params.id, fetchGame]);
 
   const handlePublishGame = async () => {
     try {
@@ -1040,18 +1040,11 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                     }
                   }}
                 >
-                  {selectedLeagueDetails.teams.map((team: any) => (
+                  {selectedLeagueDetails.teams.map((team) => 
                     team && (
                       <MenuItem 
                         key={team.id} 
                         value={team.name}
-                        sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: 1,
-                          width: 'auto',
-                          minWidth: '100%'
-                        }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
                           {team.logo && (
@@ -1070,7 +1063,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                         </div>
                       </MenuItem>
                     )
-                  ))}
+                  )}
                 </TextField>
               ) : null}
 

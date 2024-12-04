@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@aws-amplify/backend": "^1.8.0",
