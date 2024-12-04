@@ -13,19 +13,14 @@ import MenuItem from '@mui/material/MenuItem';
 import { signOut } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
-import { Divider, Paper, Avatar } from '@mui/material';
+import { Divider, Paper, Avatar, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import { useTheme } from '@aws-amplify/ui-react';
 import type {} from '@mui/x-data-grid/themeAugmentation';
 import { themeIcons } from '../app/layout';
 import { SITE_TITLE } from '../constant';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { useRouter } from 'next/navigation';
-import ListItemButton from '@mui/material/ListItemButton';
 
 const drawerWidth = 240;
 
@@ -56,6 +51,8 @@ const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
   '& .MuiDrawer-paper': {
     backgroundColor: 'var(--amplify-colors-background-primary)',
     borderRight: `1px solid var(--amplify-colors-border-primary)`,
+    padding: 0,
+    borderRadius: 0,
   },
 }));
 
@@ -63,8 +60,9 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: theme.spacing(0, 1),
-  ...theme.mixins.toolbar,
-  justifyContent: 'flex-end',
+  minHeight: 64,
+  justifyContent: 'space-between',
+  width: '100%',
 }));
 
 interface DashboardLayoutProps {
@@ -305,6 +303,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     },
   });
 
+  const menuItems = [
+    { text: 'Games', icon: <SportsEsportsIcon />, path: '/games' },
+    { text: 'Teams', icon: <GroupsIcon />, path: '/teams' },
+  ];
+
   return (
     <MUIThemeProvider theme={muiTheme}>
       <Box sx={{ display: 'flex' }}>
@@ -389,34 +392,52 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             '& .MuiDrawer-paper': {
               width: drawerWidth,
               boxSizing: 'border-box',
+              backgroundColor: 'var(--amplify-colors-background-primary)',
+              color: 'var(--amplify-colors-font-primary)',
             },
           }}
           variant="persistent"
           anchor="left"
           open={open}
         >
-          <DrawerHeader>
-            <Typography variant="h6" color="var(--amplify-colors-font-primary)" sx={{ flexGrow: 1, ml: 2 }}>
+          <DrawerHeader
+            sx={{
+              background: `linear-gradient(45deg, var(--amplify-colors-font-interactive) 30%, var(--amplify-colors-font-primary) 90%)`,
+              color: 'var(--amplify-colors-background-primary)',
+            }}
+          >
+            <Typography variant="h6" sx={{ flexGrow: 1, ml: 2, textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
               {themeIcons[currentTheme].drawer.icon} {themeIcons[currentTheme].drawer.title}
             </Typography>
-            <IconButton onClick={handleDrawerClose}>
+            <IconButton 
+              onClick={handleDrawerClose}
+              sx={{ color: 'var(--amplify-colors-background-primary)' }}
+            >
               <ChevronLeftIcon />
             </IconButton>
           </DrawerHeader>
           <Divider />
           <List>
-            <ListItemButton onClick={() => handleNavigation('/games')}>
-              <ListItemIcon>
-                <SportsEsportsIcon />
-              </ListItemIcon>
-              <ListItemText primary="Games" />
-            </ListItemButton>
-            <ListItemButton onClick={() => handleNavigation('/transfers')}>
-              <ListItemIcon>
-                <SwapHorizIcon />
-              </ListItemIcon>
-              <ListItemText primary="Transfers" />
-            </ListItemButton>
+            {menuItems.map((item) => (
+              <ListItemButton 
+                key={item.text}
+                onClick={() => router.push(item.path)}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'var(--amplify-colors-font-secondary)',
+                    color: 'var(--amplify-colors-background-primary)',
+                    '& .MuiListItemIcon-root': {
+                      color: 'var(--amplify-colors-background-primary)',
+                    }
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ color: 'var(--amplify-colors-font-interactive)' }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            ))}
           </List>
         </StyledDrawer>
         <Box

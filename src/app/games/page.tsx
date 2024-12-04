@@ -155,6 +155,12 @@ export default function Games() {
                       }
                       style={{ height: 400 }}
                       disableColumnMenu
+                      sx={{
+                        '& .MuiDataGrid-row:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.04)', // Light gray with low opacity
+                          cursor: 'pointer'
+                        }
+                      }}
                     />
                   </div>
                 )}

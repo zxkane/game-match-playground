@@ -115,7 +115,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.className}>
       <head>
-        <title>{SITE_TITLE} - {themeKey.charAt(0).toUpperCase() + themeKey.slice(1)}</title>
+        <title>{SITE_TITLE}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="Match and play games with friends. Create custom game tournaments and track scores in real-time." />
         <meta name="keywords" content="game matching, tournaments, multiplayer games, score tracking" />
