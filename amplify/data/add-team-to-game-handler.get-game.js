@@ -22,7 +22,16 @@ export function response(ctx) {
 
   // Check if the team is already added
   const { teamId } = ctx.args;
-  const teamExists = result.teams.some(teamPlayer => teamPlayer.team.id === teamId);
+  let teamExists = false;
+  const teams = result.teams || [];
+  
+  for (const team of teams) {
+    if (team.team.id === teamId) {
+      teamExists = true;
+      break;
+    }
+  }
+  
   if (teamExists) {
     util.error('Team is already added to the game');
   }
