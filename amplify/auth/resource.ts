@@ -9,7 +9,11 @@ const baseUrl = isDevelopment ? 'http://localhost:3000' : `https://${productionD
 
 export const auth = defineAuth({
   loginWith: {
-    email: true,
+    email: {
+      verificationEmailSubject: 'Your verification code',
+      verificationEmailBody: (createCode) => `Your verification code is ${createCode()}`,
+      verificationEmailStyle: 'CODE'
+    },
     externalProviders: {
       ...(isGoogleAuthEnabled ? {
         google: {
@@ -31,11 +35,22 @@ export const auth = defineAuth({
           clientId: secret(`${oidcProvider}_CLIENT_ID`),
           clientSecret: secret(`${oidcProvider}_CLIENT_SECRET`),
           issuerUrl: oidcProviderIssuerUrl,
+          scopes: ['email', 'profile', 'openid'],
           attributeMapping: {
-            email: 'EMAIL'
+            email: 'email',
+            emailVerified: 'email_verified'
           },
+          attributeRequestMethod: "POST" as const,
         }] : []),
       ],
+    }
+  },
+  signUpAttributes: ['email'],
+  allowedSignUpAttributes: [],
+  userAttributes: {
+    email: {
+      required: true,
+      mutable: true
     }
   }
 });
