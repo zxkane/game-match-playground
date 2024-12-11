@@ -236,6 +236,26 @@ const schema = a.schema({
       })
     ]),
 
+  // Custom subscriptions for match updates
+  onMatchAdded: a.subscription()
+    .for(a.ref('addMatch'))
+    .arguments({
+      gameId: a.string().required()
+    })
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.custom({
+      entry: './match-subscription-handler.js'
+    })),
+
+  onMatchDeleted: a.subscription()
+    .for(a.ref('deleteMatch'))
+    .arguments({
+      gameId: a.string().required()
+    })
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.custom({
+      entry: './match-subscription-handler.js'
+    })),
 });
 
 export type Schema = ClientSchema<typeof schema>;

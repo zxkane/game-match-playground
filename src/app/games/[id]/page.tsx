@@ -142,6 +142,32 @@ export default function GameDetail({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (params.id) {
       fetchGame();
+
+      // Subscribe to match additions
+      const addSubscription = client.subscriptions.onMatchAdded({ gameId: params.id }).subscribe({
+        next: (data) => {
+          if (data) {
+            setGame(data);
+          }
+        },
+        error: (error: Error) => console.error('Match add subscription error:', error)
+      });
+
+      // Subscribe to match deletions
+      const deleteSubscription = client.subscriptions.onMatchDeleted({ gameId: params.id }).subscribe({
+        next: (data) => {
+          if (data) {
+            setGame(data);
+          }
+        },
+        error: (error: Error) => console.error('Match delete subscription error:', error)
+      });
+
+      // Cleanup subscriptions
+      return () => {
+        addSubscription.unsubscribe();
+        deleteSubscription.unsubscribe();
+      };
     }
   }, [params.id, fetchGame]);
 
