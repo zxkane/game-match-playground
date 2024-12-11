@@ -431,10 +431,10 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     <RequireAuth>
       <UserProvider>
         <DashboardLayout>
-          <main className="min-h-screen p-8">
-            <div className="max-w-4xl mx-auto space-y-6">
+          <main className="min-h-screen p-2 sm:p-8">
+            <div className="space-y-4">
               {isLoading ? (
-                <div className="flex justify-center p-8">
+                <div className="flex justify-center p-4">
                   <CircularProgress />
                 </div>
               ) : error ? (
@@ -443,402 +443,475 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                 </Alert>
               ) : game ? (
                 <>
-                  <BreadcrumbsComponent
-                    links={[
-                      { href: '/', label: 'Home' },
-                      { href: '/games', label: 'Games' }
-                    ]}
-                    current={game.name}
-                  />
+                  <div className="flex justify-between items-center">
+                    <BreadcrumbsComponent
+                      links={[
+                        { href: '/', label: 'Home' },
+                        { href: '/games', label: 'Games' }
+                      ]}
+                      current={game.name}
+                    />
+                  </div>
                   {alertMessage && (
                     <Alert severity={alertMessage.type} onClose={() => setAlertMessage(null)}>
                       {alertMessage.message}
                     </Alert>
                   )}
-                <Paper className="p-6 space-y-4">
-                  <div className="flex items-center justify-between space-x-4">
-                    <div className="flex items-center space-x-4">
-                      <Typography variant="h4" component="h1" className="mr-4">
-                        {game.name}
-                      </Typography>
-                      <Chip
-                        icon={
-                          game.status === 'draft' ? <DraftsIcon /> 
-                          : game.status === 'active' ? <PendingIcon />
-                          : game.status === 'completed' ? <DoneAllIcon />
-                          : game.status === 'deleted' ? <DeleteIcon />
-                          : <DraftsIcon />  // fallback icon
-                        }
-                        label={game.status?.toUpperCase()}
-                        color={
-                          game.status === 'draft' ? 'default'
-                          : game.status === 'active' ? 'primary'
-                          : game.status === 'completed' ? 'success'
-                          : game.status === 'deleted' ? 'error'
-                          : 'default'
-                        }
-                        size="small"
-                        variant="outlined"
-                      />
-                    </div>
-                      <ButtonGroup variant="contained" size="small">
-                        {game.status === 'draft' && (
-                          <Tooltip title={
-                            (!game.teams || Object.keys(game.teams).length < 2) 
-                              ? "At least two teams are required to publish" 
-                              : "Publish Game"
-                          }>
-                            <span>
-                              <Button
-                                onClick={handlePublishGame}
-                                startIcon={<PublishIcon />}
-                                color="primary"
-                                disabled={!game.teams || Object.keys(game.teams).length < 2}
+                  <div className="grid grid-cols-1 gap-4">
+                    <Paper className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-4">
+                            <Typography variant="h4" component="h1" className="mr-4">
+                              {game.name}
+                            </Typography>
+                            <Chip
+                              icon={
+                                game.status === 'draft' ? <DraftsIcon /> 
+                                : game.status === 'active' ? <PendingIcon />
+                                : game.status === 'completed' ? <DoneAllIcon />
+                                : game.status === 'deleted' ? <DeleteIcon />
+                                : <DraftsIcon />  // fallback icon
+                              }
+                              label={game.status?.toUpperCase()}
+                              color={
+                                game.status === 'draft' ? 'default'
+                                : game.status === 'active' ? 'primary'
+                                : game.status === 'completed' ? 'success'
+                                : game.status === 'deleted' ? 'error'
+                                : 'default'
+                              }
+                              size="small"
+                              variant="outlined"
+                            />
+                            <div className="hidden sm:flex sm:justify-end">
+                              <ButtonGroup 
+                                variant="contained" 
+                                size="small"
+                                sx={{ 
+                                  '& .MuiButton-root': {
+                                    width: '150px',
+                                  }
+                                }}
                               >
-                                Publish
-                              </Button>
-                            </span>
-                          </Tooltip>
-                        )}
-                        {game.status === 'active' && (
-                          <Tooltip title="Complete Game">
-                            <Button
-                              onClick={handleCompleteGame}
-                              startIcon={<DoneIcon />}
-                              color="success"
-                            >
-                              Complete
-                            </Button>
-                          </Tooltip>
-                        )}
-                        {game.status != 'deleted' && (
-                          <Tooltip title="Delete Game">
-                            <Button
-                              onClick={handleDeleteGame}
-                              startIcon={<DeleteIcon />}
-                              color="error"
-                            >
-                              Delete
-                            </Button>
-                          </Tooltip>
-                        )}
-                      </ButtonGroup>
-                  </div>
-                  <Typography variant="body1" className="text-gray-600">
-                    {game.description}
-                  </Typography>
-                  <div className="space-y-2">
-                    <Typography variant="body2" className="flex items-center gap-2">
-                      <AddCircleOutlineIcon fontSize="small" />
-                      {new Date(game.createdAt).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" className="flex items-center gap-2">
-                      <UpdateIcon fontSize="small" />
-                      {new Date(game.updatedAt).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Owner:</strong> {game.owner}
-                    </Typography>
-                  </div>
-                  </Paper>
-                  {game.status === 'draft' ? (
-                    <Paper className="mt-4">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <Typography variant="h4" className="text-gray-800">
-                            Teams
-                          </Typography>
-                          {game.status === 'draft' && (
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={handleAddTeamClick}
-                              startIcon={isLoadingLeagues ? <CircularProgress size={20} /> : <AddIcon />}
-                              disabled={isLoadingLeagues}
-                            >
-                              {isLoadingLeagues ? 'Loading...' : 'Add New Team'}
-                            </Button>
-                          )}
-                        </div>
-                        {game.teams && Object.keys(game.teams).length > 0 ? (
-                          <div className="grid grid-cols-4 gap-1 sm:gap-4">
-                            {Object.values(game.teams).map((teamPlayer) => 
-                              teamPlayer && teamPlayer.team && (
-                                <Paper 
-                                  key={teamPlayer.team.id} 
-                                  className="p-1 sm:p-4 flex flex-col items-center text-center relative"
-                                  elevation={1}
-                                >
-                                  {game.status === 'draft' && (
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      onClick={() => handleRemoveTeam(teamPlayer.team!.id)}
-                                      sx={{ 
-                                        position: 'absolute',
-                                        right: 4,
-                                        top: 4,
-                                        opacity: 0.7,
-                                        '&:hover': {
-                                          opacity: 1
-                                        }
-                                      }}
+                                {game.status === 'draft' && (
+                                  <Tooltip title={
+                                    (!game.teams || Object.keys(game.teams).length < 2) 
+                                      ? "At least two teams are required to publish" 
+                                      : "Publish Game"
+                                  }>
+                                    <span>
+                                      <Button
+                                        onClick={handlePublishGame}
+                                        startIcon={<PublishIcon />}
+                                        color="primary"
+                                        disabled={!game.teams || Object.keys(game.teams).length < 2}
+                                      >
+                                        Publish
+                                      </Button>
+                                    </span>
+                                  </Tooltip>
+                                )}
+                                {game.status === 'active' && (
+                                  <Tooltip title="Complete Game">
+                                    <Button
+                                      onClick={handleCompleteGame}
+                                      startIcon={<DoneIcon />}
+                                      color="success"
                                     >
-                                      <DeleteOutlineIcon fontSize="small" />
-                                    </IconButton>
-                                  )}
-                                  {teamPlayer.team.logo && (
-                                    <Avatar
-                                      src={teamPlayer.team.logo}
-                                    alt={teamPlayer.team.name}
-                                    sx={{ 
-                                      width: { xs: 40, sm: 64 }, 
-                                      height: { xs: 40, sm: 64 },
-                                      mb: { xs: 0.5, sm: 1 }
-                                    }}
-                                    variant="rounded"
+                                      Complete
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                                {game.status != 'deleted' && (
+                                  <Tooltip title="Delete Game">
+                                    <Button
+                                      onClick={handleDeleteGame}
+                                      startIcon={<DeleteIcon />}
+                                      color="error"
+                                    >
+                                      Delete
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                              </ButtonGroup>
+                            </div>
+                          </div>
+                          <Typography variant="body1" className="text-gray-600 mt-4">
+                            {game.description}
+                          </Typography>
+                          <div className="space-y-2 mt-4">
+                            <Typography variant="body2" className="flex items-center gap-2">
+                              <AddCircleOutlineIcon fontSize="small" />
+                              {new Date(game.createdAt).toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2" className="flex items-center gap-2">
+                              <UpdateIcon fontSize="small" />
+                              {new Date(game.updatedAt).toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Owner:</strong> {game.owner}
+                            </Typography>
+                          </div>
+                          <div className="mt-4 sm:hidden flex justify-center">
+                            <ButtonGroup 
+                              variant="contained" 
+                              size="small"
+                              sx={{ 
+                                width: '100%',
+                                '& .MuiButton-root': {
+                                  width: '150px',
+                                }
+                              }}
+                            >
+                              {game.status === 'draft' && (
+                                <Tooltip title={
+                                  (!game.teams || Object.keys(game.teams).length < 2) 
+                                    ? "At least two teams are required to publish" 
+                                    : "Publish Game"
+                                }>
+                                  <span style={{ width: '100%' }}>
+                                    <Button
+                                      onClick={handlePublishGame}
+                                      startIcon={<PublishIcon />}
+                                      color="primary"
+                                      disabled={!game.teams || Object.keys(game.teams).length < 2}
+                                      fullWidth
+                                    >
+                                      Publish
+                                    </Button>
+                                  </span>
+                                </Tooltip>
+                              )}
+                              {game.status === 'active' && (
+                                <Tooltip title="Complete Game">
+                                  <Button
+                                    onClick={handleCompleteGame}
+                                    startIcon={<DoneIcon />}
+                                    color="success"
                                   >
-                                      {teamPlayer.team.name?.charAt(0)}
-                                    </Avatar>
-                                  )}
-                                  <Typography 
-                                    variant="subtitle2" 
-                                    sx={{ 
-                                      fontWeight: 'bold',
-                                      width: '100%',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap',
-                                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                                    }}
+                                    Complete
+                                  </Button>
+                                </Tooltip>
+                              )}
+                              {game.status != 'deleted' && (
+                                <Tooltip title="Delete Game">
+                                  <Button
+                                    onClick={handleDeleteGame}
+                                    startIcon={<DeleteIcon />}
+                                    color="error"
                                   >
-                                    {teamPlayer.team.name}
-                                  </Typography>
-                                  {teamPlayer.player && (
+                                    Delete
+                                  </Button>
+                                </Tooltip>
+                              )}
+                            </ButtonGroup>
+                          </div>
+                        </div>
+                      </div>
+                    </Paper>
+                    
+                    {game.status === 'draft' ? (
+                      <Paper className="p-4">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Typography variant="h4" className="text-gray-800">
+                              Teams
+                            </Typography>
+                            {game.status === 'draft' && (
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleAddTeamClick}
+                                startIcon={isLoadingLeagues ? <CircularProgress size={20} /> : <AddIcon />}
+                                disabled={isLoadingLeagues}
+                              >
+                                {isLoadingLeagues ? 'Loading...' : 'Add New Team'}
+                              </Button>
+                            )}
+                          </div>
+                          {game.teams && Object.keys(game.teams).length > 0 ? (
+                            <div className="grid grid-cols-4 gap-1 sm:gap-4">
+                              {Object.values(game.teams).map((teamPlayer) => 
+                                teamPlayer && teamPlayer.team && (
+                                  <Paper 
+                                    key={teamPlayer.team.id} 
+                                    className="p-1 sm:p-4 flex flex-col items-center text-center relative"
+                                    elevation={1}
+                                  >
+                                    {game.status === 'draft' && (
+                                      <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() => handleRemoveTeam(teamPlayer.team!.id)}
+                                        sx={{ 
+                                          position: 'absolute',
+                                          right: 4,
+                                          top: 4,
+                                          opacity: 0.7,
+                                          '&:hover': {
+                                            opacity: 1
+                                          }
+                                        }}
+                                      >
+                                        <DeleteOutlineIcon fontSize="small" />
+                                      </IconButton>
+                                    )}
+                                    {teamPlayer.team.logo && (
+                                      <Avatar
+                                        src={teamPlayer.team.logo}
+                                        alt={teamPlayer.team.name}
+                                        sx={{ 
+                                          width: { xs: 40, sm: 64 }, 
+                                          height: { xs: 40, sm: 64 },
+                                          mb: { xs: 0.5, sm: 1 }
+                                        }}
+                                        variant="rounded"
+                                      >
+                                          {teamPlayer.team.name?.charAt(0)}
+                                        </Avatar>
+                                    )}
                                     <Typography 
-                                      variant="caption" 
-                                      color="text.secondary"
-                                      sx={{
+                                      variant="subtitle2" 
+                                      sx={{ 
+                                        fontWeight: 'bold',
                                         width: '100%',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap',
-                                        fontSize: { xs: '0.625rem', sm: '0.75rem' }
+                                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
                                       }}
                                     >
-                                      {teamPlayer.player}
+                                      {teamPlayer.team.name}
                                     </Typography>
-                                  )}
-                                </Paper>
-                              )
-                            )}
-                          </div>
-                        ) : (
-                          <Paper className="p-6 text-center">
-                            <Typography variant="body2" className="text-gray-600">
-                              No teams available.
-                            </Typography>
-                          </Paper>
-                        )}
-                      </div>
-                    </Paper>
-                  ) : (
-                    <Paper className="mt-4">
-                      <div className="space-y-4">
-                        <Typography variant="h4" className="text-gray-800 mb-4">
-                          Standings
-                        </Typography>
-                        {game.teams && game.teams.length > 0 ? (
-                          <TableContainer>
-                            <Table>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Team</TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Played</span>
-                                    <span className="sm:hidden">P</span>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Won</span>
-                                    <span className="sm:hidden">W</span>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Drawn</span>
-                                    <span className="sm:hidden">D</span>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Lost</span>
-                                    <span className="sm:hidden">L</span>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Goals For</span>
-                                    <span className="sm:hidden">GF</span>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Goals Against</span>
-                                    <span className="sm:hidden">GA</span>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Goal Difference</span>
-                                    <span className="sm:hidden">GD</span>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <span className="hidden sm:inline">Points</span>
-                                    <span className="sm:hidden">Pts</span>
-                                  </TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {calculateStandings(game.matches?.filter((match): match is Schema['Match']['type'] => match !== null && match !== undefined) || [], game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [])
-                                  .sort((a, b) => 
-                                    b.points - a.points || // Sort by points
-                                    (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || // Then by goal difference
-                                    b.goalsFor - a.goalsFor // Then by goals scored
-                                  )
-                                  .map((standing) => {
-                                    const team = getTeamById(game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [], standing.teamId);
-                                    if (!team) return null;
-
-                                    return (
-                                      <TableRow key={standing.teamId}>
-                                        <TableCell>
-                                          <div className="flex items-center gap-2">
-                                            <Avatar
-                                              src={team.team.logo || ''}
-                                              alt={team.team.name}
-                                              sx={{ width: 24, height: 24 }}
-                                              variant="rounded"
-                                            />
-                                            <span>{team.team.name}</span>
-                                          </div>
-                                        </TableCell>
-                                        <TableCell align="center">{standing.played}</TableCell>
-                                        <TableCell align="center">{standing.won}</TableCell>
-                                        <TableCell align="center">{standing.drawn}</TableCell>
-                                        <TableCell align="center">{standing.lost}</TableCell>
-                                        <TableCell align="center">{standing.goalsFor}</TableCell>
-                                        <TableCell align="center">{standing.goalsAgainst}</TableCell>
-                                        <TableCell align="center">{standing.goalsFor - standing.goalsAgainst}</TableCell>
-                                        <TableCell align="center">{standing.points}</TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        ) : (
-                          <Paper className="p-6 text-center">
-                            <Typography variant="body2" className="text-gray-600">
-                              No teams available.
-                            </Typography>
-                          </Paper>
-                        )}
-                      </div>
-                    </Paper>
-                  )}
-                  {game.status === 'active' || game.status === 'completed' ? (
-                    <Paper className="p-6 mt-4">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <Typography variant="h4" className="text-gray-800">
-                            Matches
-                          </Typography>
-                          {game.status === 'active' && (
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={() => setOpenAddMatchDialog(true)}
-                              startIcon={<AddIcon />}
-                            >
-                              Add Match
-                            </Button>
+                                    {teamPlayer.player && (
+                                      <Typography 
+                                        variant="caption" 
+                                        color="text.secondary"
+                                        sx={{
+                                          width: '100%',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                          fontSize: { xs: '0.625rem', sm: '0.75rem' }
+                                        }}
+                                      >
+                                        {teamPlayer.player}
+                                      </Typography>
+                                    )}
+                                  </Paper>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <Paper className="p-4 sm:p-6 text-center w-full">
+                              <Typography variant="body2" className="text-gray-600">
+                                No teams available.
+                              </Typography>
+                            </Paper>
                           )}
                         </div>
+                      </Paper>
+                    ) : (
+                      <Paper className="p-4">
+                        <div className="space-y-4">
+                          <Typography variant="h4" className="text-gray-800 mb-4">
+                            Standings
+                          </Typography>
+                          {game.teams && game.teams.length > 0 ? (
+                            <TableContainer>
+                              <Table size="small">
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell className="px-2">Team</TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Played</span>
+                                      <span className="sm:hidden">P</span>
+                                    </TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Won</span>
+                                      <span className="sm:hidden">W</span>
+                                    </TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Drawn</span>
+                                      <span className="sm:hidden">D</span>
+                                    </TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Lost</span>
+                                      <span className="sm:hidden">L</span>
+                                    </TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Goals For</span>
+                                      <span className="sm:hidden">GF</span>
+                                    </TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Goals Against</span>
+                                      <span className="sm:hidden">GA</span>
+                                    </TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Goal Diff</span>
+                                      <span className="sm:hidden">GD</span>
+                                    </TableCell>
+                                    <TableCell align="center" className="px-1">
+                                      <span className="hidden sm:inline">Points</span>
+                                      <span className="sm:hidden">Pts</span>
+                                    </TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {calculateStandings(game.matches?.filter((match): match is Schema['Match']['type'] => match !== null && match !== undefined) || [], game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [])
+                                    .sort((a, b) => 
+                                      b.points - a.points || // Sort by points
+                                      (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || // Then by goal difference
+                                      b.goalsFor - a.goalsFor // Then by goals scored
+                                    )
+                                    .map((standing) => {
+                                      const team = getTeamById(game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [], standing.teamId);
+                                      if (!team) return null;
 
-                        {game.matches && game.matches.length > 0 ? (
-                          <TableContainer>
-                            <Table>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Date</TableCell>
-                                  <TableCell align="right">Home Team</TableCell>
-                                  <TableCell align="center">Score</TableCell>
-                                  <TableCell align="left">Away Team</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {game.matches
-                                  .filter((match): match is Schema['Match']['type'] => match !== null)
-                                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                                  .map((match, index) => {
-                                    const homeTeam = getTeamById(game.teams?.filter((t): t is Schema['TeamPlayer']['type'] => t !== null && t !== undefined) || [], match.homeTeamId);
-                                    const awayTeam = getTeamById(game.teams?.filter((t): t is Schema['TeamPlayer']['type'] => t !== null && t !== undefined) || [], match.awayTeamId);
-                                    
-                                    if (!homeTeam || !awayTeam) return null;
-
-                                    return (
-                                      <TableRow key={`${match.homeTeamId}-${match.awayTeamId}-${match.date}`}>
-                                        <TableCell>
-                                          {new Date(match.date).toLocaleDateString()}
-                                        </TableCell>
-                                        <TableCell align="right">
-                                          <div className="flex items-center justify-end gap-2">
-                                            <span>{homeTeam.team.name}</span>
-                                            <Avatar
-                                              src={homeTeam.team.logo || ''}
-                                              alt={homeTeam.team.name}
-                                              sx={{ width: 24, height: 24 }}
-                                              variant="rounded"
-                                            />
-                                          </div>
-                                        </TableCell>
-                                        <TableCell align="center">
-                                          {match.homeScore} - {match.awayScore}
-                                        </TableCell>
-                                        <TableCell align="left">
-                                          <div className="flex items-center gap-2">
-                                            <Avatar
-                                              src={awayTeam.team.logo || ''}
-                                              alt={awayTeam.team.name}
-                                              sx={{ width: 24, height: 24 }}
-                                              variant="rounded"
-                                            />
-                                            <span>{awayTeam.team.name}</span>
-                                          </div>
-                                        </TableCell>
-                                        {game.status === 'active' && (
-                                          <TableCell align="right" padding="none">
-                                            <IconButton
-                                              size="small"
-                                              onClick={() => handleDeleteMatch(index)}
-                                              sx={{ 
-                                                opacity: 0.7,
-                                                '&:hover': {
-                                                  opacity: 1
-                                                }
-                                              }}
-                                            >
-                                              <DeleteIcon fontSize="small" />
-                                            </IconButton>
+                                      return (
+                                        <TableRow key={standing.teamId}>
+                                          <TableCell className="px-2">
+                                            <div className="flex items-center gap-1">
+                                              <Avatar
+                                                src={team.team.logo || ''}
+                                                alt={team.team.name}
+                                                sx={{ width: { xs: 16, sm: 24 }, height: { xs: 16, sm: 24 } }}
+                                                variant="rounded"
+                                              />
+                                              <span className="truncate max-w-[80px] sm:max-w-none">
+                                                {team.team.name}
+                                              </span>
+                                            </div>
                                           </TableCell>
-                                        )}
-                                      </TableRow>
-                                    );
-                                  })
-                                  .filter(Boolean)}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        ) : (
-                          <Paper className="p-6 text-center">
-                            <Typography variant="body2" className="text-gray-600">
-                              No matches available.
+                                          <TableCell align="center" className="px-1">{standing.played}</TableCell>
+                                          <TableCell align="center" className="px-1">{standing.won}</TableCell>
+                                          <TableCell align="center" className="px-1">{standing.drawn}</TableCell>
+                                          <TableCell align="center" className="px-1">{standing.lost}</TableCell>
+                                          <TableCell align="center" className="px-1">{standing.goalsFor}</TableCell>
+                                          <TableCell align="center" className="px-1">{standing.goalsAgainst}</TableCell>
+                                          <TableCell align="center" className="px-1">{standing.goalsFor - standing.goalsAgainst}</TableCell>
+                                          <TableCell align="center" className="px-1">{standing.points}</TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                </TableBody>
+                              </Table>
+                            </TableContainer>
+                          ) : (
+                            <Paper className="p-4 sm:p-6 text-center w-full">
+                              <Typography variant="body2" className="text-gray-600">
+                                No teams available.
+                              </Typography>
+                            </Paper>
+                          )}
+                        </div>
+                      </Paper>
+                    )}
+                    {game.status === 'active' || game.status === 'completed' ? (
+                      <Paper className="p-4">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Typography variant="h4" className="text-gray-800">
+                              Matches
                             </Typography>
-                          </Paper>
-                        )}
-                      </div>
-                    </Paper>
-                  ) : null}
+                            {game.status === 'active' && (
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => setOpenAddMatchDialog(true)}
+                                startIcon={<AddIcon />}
+                              >
+                                Add Match
+                              </Button>
+                            )}
+                          </div>
+
+                          {game.matches && game.matches.length > 0 ? (
+                            <TableContainer>
+                              <Table>
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Date</TableCell>
+                                    <TableCell align="right">Home Team</TableCell>
+                                    <TableCell align="center">Score</TableCell>
+                                    <TableCell align="left">Away Team</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {game.matches
+                                    .filter((match): match is Schema['Match']['type'] => match !== null)
+                                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                    .map((match, index) => {
+                                      const homeTeam = getTeamById(game.teams?.filter((t): t is Schema['TeamPlayer']['type'] => t !== null && t !== undefined) || [], match.homeTeamId);
+                                      const awayTeam = getTeamById(game.teams?.filter((t): t is Schema['TeamPlayer']['type'] => t !== null && t !== undefined) || [], match.awayTeamId);
+                                      
+                                      if (!homeTeam || !awayTeam) return null;
+
+                                      return (
+                                        <TableRow key={`${match.homeTeamId}-${match.awayTeamId}-${match.date}`}>
+                                          <TableCell>
+                                            {new Date(match.date).toLocaleDateString()}
+                                          </TableCell>
+                                          <TableCell align="right">
+                                            <div className="flex items-center justify-end gap-2">
+                                              <span>{homeTeam.team.name}</span>
+                                              <Avatar
+                                                src={homeTeam.team.logo || ''}
+                                                alt={homeTeam.team.name}
+                                                sx={{ width: 24, height: 24 }}
+                                                variant="rounded"
+                                              />
+                                            </div>
+                                          </TableCell>
+                                          <TableCell align="center">
+                                            {match.homeScore} - {match.awayScore}
+                                          </TableCell>
+                                          <TableCell align="left">
+                                            <div className="flex items-center gap-2">
+                                              <Avatar
+                                                src={awayTeam.team.logo || ''}
+                                                alt={awayTeam.team.name}
+                                                sx={{ width: 24, height: 24 }}
+                                                variant="rounded"
+                                              />
+                                              <span>{awayTeam.team.name}</span>
+                                            </div>
+                                          </TableCell>
+                                          {game.status === 'active' && (
+                                            <TableCell align="right" padding="none">
+                                              <IconButton
+                                                size="small"
+                                                onClick={() => handleDeleteMatch(index)}
+                                                sx={{ 
+                                                  opacity: 0.7,
+                                                  '&:hover': {
+                                                    opacity: 1
+                                                  }
+                                                }}
+                                              >
+                                                <DeleteIcon fontSize="small" />
+                                              </IconButton>
+                                            </TableCell>
+                                          )}
+                                        </TableRow>
+                                      );
+                                    })
+                                    .filter(Boolean)}
+                                </TableBody>
+                              </Table>
+                            </TableContainer>
+                          ) : (
+                            <Paper className="p-4 sm:p-6 text-center w-full">
+                              <Typography variant="body2" className="text-gray-600">
+                                No matches available.
+                              </Typography>
+                            </Paper>
+                          )}
+                        </div>
+                      </Paper>
+                    ) : null}
+                  </div>
                   <div className="flex justify-end space-x-2 mt-4">
                     <Button
                       variant="outlined"
