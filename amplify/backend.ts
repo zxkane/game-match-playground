@@ -2,7 +2,7 @@ import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data, leagueHandler } from './data/resource';
 import { RemovalPolicy } from 'aws-cdk-lib';
-import { Table, AttributeType, BillingMode } from 'aws-cdk-lib/aws-dynamodb';
+import { Table, AttributeType, BillingMode, ProjectionType } from 'aws-cdk-lib/aws-dynamodb';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { secret } from '@aws-amplify/backend';
 import { Runtime, CfnFunction } from 'aws-cdk-lib/aws-lambda';
@@ -38,3 +38,9 @@ leagueTable.grantReadWriteData(backend.leagueHandler.resources.lambda);
   SystemLogLevel: 'INFO',
 });
 (backend.leagueHandler.resources.lambda as NodejsFunction).addEnvironment('LEAGUE_TABLE_NAME', leagueTable.tableName);
+
+// speicfy the ttl for gameviewer table
+backend.data.resources.cfnResources.amplifyDynamoDbTables['GameViewer'].timeToLiveAttribute = {
+  attributeName: 'lastSeen',
+  enabled: true,
+};

@@ -256,6 +256,47 @@ const schema = a.schema({
     .handler(a.handler.custom({
       entry: './match-subscription-handler.js'
     })),
+
+  GameViewer: a.model({
+    userId: a.string().required(),
+    username: a.string().required(),
+    gameId: a.string().required(),
+    lastSeen: a.integer().required(),
+  }).identifier(['gameId', 'userId'])
+  .secondaryIndexes((index) => [
+    index('gameId').sortKeys(['lastSeen']).queryField('listByLastSeen').name('listByGameIdOrderByLastSeen')
+  ])
+  .disableOperations(['create', 'update', 'delete'])
+  .authorization(allow => allow.authenticated()),
+
+  addGameViewer: a.mutation()
+    .arguments({
+      gameId: a.string().required(),
+    })
+    .returns(a.ref('GameViewer').array())
+    .authorization(allow => [allow.authenticated()])
+    .handler([
+      a.handler.custom({
+        entry: './add-game-viewer-handler.js',
+        dataSource: a.ref('GameViewer'),
+      }),
+      a.handler.custom({
+        entry: './get-game-viewers-handler.js',
+        dataSource: a.ref('GameViewer'),
+      }),
+    ]),
+
+  onGameViewersUpdated: a.subscription()
+    .for(a.ref('addGameViewer'))
+    .arguments({
+      gameId: a.string().required()
+    })
+    .authorization(allow => [allow.authenticated()])
+    .handler(
+      a.handler.custom({
+        entry: './game-viewers-subscription-handler.js',
+      }),
+    ),
 });
 
 export type Schema = ClientSchema<typeof schema>;

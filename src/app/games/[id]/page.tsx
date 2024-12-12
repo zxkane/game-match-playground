@@ -44,6 +44,10 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Image from 'next/image';
+import { getCurrentUser } from 'aws-amplify/auth';
+import { useInterval } from '@/hooks/useInterval';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import { stringToColor, stringAvatar } from '@/utils/avatar';
 
 const client = generateClient<Schema>();
 
@@ -59,6 +63,8 @@ type Standing = {
   goalsAgainst: number;
   points: number;
 };
+
+type GameViewer = Schema['GameViewer']['type'];
 
 export default function GameDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -81,6 +87,8 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     awayScore: 0,
     date: '',
   });
+  const [currentUser, setCurrentUser] = useState<{ username: string, userId: string } | null>(null);
+  const [gameViewers, setGameViewers] = useState<GameViewer[]>([]);
 
   const updateGameStatus = async (gameId: string, status: GameStatus) => {
     try {
@@ -427,6 +435,98 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     }
   };
 
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser({
+          username: user.username,
+          userId: user.userId
+        });
+      } catch (error) {
+        console.error('Error getting current user:', error);
+      }
+    };
+    initUser();
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser || !params.id) return;
+
+    // Subscribe to viewer updates
+    const subscription = client.subscriptions.onGameViewersUpdated({ gameId: params.id }).subscribe({
+      next: (data) => {
+        if (data) {
+          // Filter out null/undefined values and inactive viewers
+          const activeViewers = data
+            .filter((viewer): viewer is Schema['GameViewer']['type'] => 
+              viewer !== null && 
+              viewer !== undefined && 
+              new Date(viewer.lastSeen * 1000).getTime() > Date.now() - 60 * 1000
+            );
+          setGameViewers(activeViewers);
+        }
+      },
+      error: (error) => console.error('Game viewers subscription error:', error)
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [currentUser, params.id]);
+
+  useEffect(() => {
+    if (!params.id) return;
+
+    // Add viewer record when component mounts
+    const addViewer = async () => {
+      try {
+        const session = await fetchAuthSession();
+        if (!session.tokens?.idToken) {
+          throw new Error('User not authenticated');
+        }
+
+        const result = await client.mutations.addGameViewer({
+          gameId: params.id,
+        }, {
+          authMode: 'userPool',
+          headers: {
+            'Authorization': session.tokens.idToken.toString(),
+          }
+        });
+
+        if (result.errors) {
+          throw new Error(result.errors.map(e => e.message).join(', '));
+        }
+
+        if (!result.data) {
+          throw new Error('No data returned from viewer update');
+        }
+
+        const activeViewers = result.data
+          .filter((viewer): viewer is Schema['GameViewer']['type'] => 
+            viewer !== null && 
+            viewer !== undefined && 
+            new Date(viewer.lastSeen * 1000).getTime() > Date.now() - 60 * 1000
+          );
+        setGameViewers(activeViewers);
+      } catch (error) {
+        console.error('Error adding game viewer:', error);
+        setAlertMessage({ 
+          type: 'error', 
+          message: error instanceof Error ? error.message : 'Failed to add game viewer'
+        });
+      }
+    };
+    
+    addViewer();
+
+    // Set up interval to update lastSeen
+    const interval = setInterval(addViewer, 30000);
+
+    return () => clearInterval(interval);
+  }, [params.id]);
+
   return (
     <RequireAuth>
       <UserProvider>
@@ -552,6 +652,31 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                             <Typography variant="body2">
                               <strong>Owner:</strong> {game.owner}
                             </Typography>
+                          </div>
+                          <div className="mt-4 flex items-center gap-2">
+                            <AvatarGroup max={6}>
+                              {gameViewers.map((viewer) => (
+                                <Tooltip 
+                                  key={viewer.userId} 
+                                  title={viewer.username}
+                                  placement="top"
+                                >
+                                  <Avatar
+                                    {...stringAvatar(viewer.username)}
+                                    sx={{ 
+                                      width: 32, 
+                                      height: 32,
+                                      bgcolor: stringToColor(viewer.username)
+                                    }}
+                                  />
+                                </Tooltip>
+                              ))}
+                            </AvatarGroup>
+                            {gameViewers.length > 0 && (
+                              <Typography variant="body2" color="text.secondary">
+                                {gameViewers.length == 1 ? 'is viewing this game.' : 'are viewing this game.'}
+                              </Typography>
+                            )}
                           </div>
                           <div className="mt-4 sm:hidden flex justify-center">
                             <ButtonGroup 

@@ -21,6 +21,7 @@ import { SITE_TITLE } from '../constant';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useRouter } from 'next/navigation';
+import { stringAvatar } from '@/utils/avatar';
 
 const drawerWidth = 240;
 
@@ -67,46 +68,6 @@ const DrawerHeader = styled('div')(() => ({
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-}
-
-function stringToColor(string: string) {
-  let hash = 0;
-  let i;
-
-  /* eslint-disable no-bitwise */
-  for (i = 0; i < string.length; i += 1) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  let color = '#';
-
-  for (i = 0; i < 3; i += 1) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += `00${value.toString(16)}`.slice(-2);
-  }
-  /* eslint-enable no-bitwise */
-
-  return color;
-}
-
-function stringAvatar(email: string) {
-  const name = email.split('@')[0];
-  const words = name.split(/[._-]/);
-  const letters = words.length > 1 
-    ? `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase()
-    : name.length > 1 
-      ? name.slice(0, 2).toUpperCase() 
-      : name[0].toUpperCase();
-
-  return {
-    sx: {
-      width: 32,
-      height: 32,
-      bgcolor: stringToColor(email),
-      fontSize: '0.875rem'
-    },
-    children: letters,
-  };
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

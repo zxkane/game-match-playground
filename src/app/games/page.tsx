@@ -147,7 +147,12 @@ export default function Games() {
                     <DataGrid
                       rows={games}
                       columns={columns}
-                      pageSizeOptions={[5]}
+                      initialState={{
+                        pagination: {
+                          paginationModel: { pageSize: 10, page: 0 },
+                        },
+                      }}
+                      pageSizeOptions={[10, 25, 50, 100]}
                       onRowClick={(params) => router.push(`/games/${params.id}`)}
                       columnVisibilityModel={columnVisibilityModel}
                       onColumnVisibilityModelChange={(newModel) =>
