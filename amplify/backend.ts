@@ -2,12 +2,10 @@ import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data, leagueHandler } from './data/resource';
 import { RemovalPolicy } from 'aws-cdk-lib';
-import { Table, AttributeType, BillingMode, ProjectionType } from 'aws-cdk-lib/aws-dynamodb';
+import { Table, AttributeType, BillingMode } from 'aws-cdk-lib/aws-dynamodb';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { secret } from '@aws-amplify/backend';
-import { Runtime, CfnFunction } from 'aws-cdk-lib/aws-lambda';
+import { CfnFunction } from 'aws-cdk-lib/aws-lambda';
 
-const rapidApiKey = secret('RAPID_API_KEY');
 
 export const backend = defineBackend({
   auth,

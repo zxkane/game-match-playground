@@ -561,11 +561,12 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                     <Paper className="p-4">
                       <div className="flex flex-col sm:flex-row sm:justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-4">
-                            <Typography variant="h4" component="h1" className="mr-4">
-                              {game.name}
-                            </Typography>
-                            <Chip
+                          <div className="flex items-center space-x-4 sm:justify-between">
+                            <div className="flex items-center space-x-4">
+                              <Typography variant="h4" component="h1" className="mr-4">
+                                {game.name}
+                              </Typography>
+                              <Chip
                               icon={
                                 game.status === 'draft' ? <DraftsIcon /> 
                                 : game.status === 'active' ? <PendingIcon />
@@ -584,6 +585,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                               size="small"
                               variant="outlined"
                             />
+                            </div>
                             <div className="hidden sm:flex sm:justify-end">
                               <ButtonGroup 
                                 variant="contained" 
@@ -680,7 +682,6 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                           </div>
                           <div className="mt-4 sm:hidden flex justify-center">
                             <ButtonGroup 
-                              variant="contained" 
                               size="small"
                               sx={{ 
                                 width: '100%',
