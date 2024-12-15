@@ -45,11 +45,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Image from 'next/image';
 import { getCurrentUser } from 'aws-amplify/auth';
-import { useInterval } from '@/hooks/useInterval';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import { stringToColor, stringAvatar } from '@/utils/avatar';
+import { createAIHooks } from "@aws-amplify/ui-react-ai";
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 const client = generateClient<Schema>();
+const { useAIGeneration } = createAIHooks(client);
 
 type GameStatus = 'active' | 'completed' | 'deleted';
 
@@ -65,6 +67,139 @@ type Standing = {
 };
 
 type GameViewer = Schema['GameViewer']['type'];
+
+interface GameInsightsProps {
+  game: Schema['Game']['type'];
+  standings: Standing[];
+}
+
+const GameInsights: React.FC<GameInsightsProps> = ({ game, standings }) => {
+  const [insights, setInsights] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Create a cache key based on relevant data
+  const getCacheKey = useCallback(() => {
+    const matchesKey = game.matches
+      ?.slice(-5)
+      .map(m => `${m?.homeTeamId}${m?.homeScore}-${m?.awayScore}${m?.awayTeamId}`)
+      .join('|');
+      
+    const standingsKey = standings
+      .map(s => `${s.teamId}:${s.points}:${s.goalsFor}-${s.goalsAgainst}`)
+      .join('|');
+      
+    return `${matchesKey}|${standingsKey}`;
+  }, [game.matches, standings]);
+
+  useEffect(() => {
+    const generateInsights = async () => {
+      const cacheKey = getCacheKey();
+      
+      // Try to get cached insights from localStorage
+      const cached = localStorage.getItem(`gameInsights-${game.id}-${cacheKey}`);
+      if (cached) {
+        setError(null);
+        setInsights(cached);
+        return;
+      }
+
+      setError(null);
+      setIsGenerating(true);
+      try {
+        // Prepare the prompt with game data
+        const prompt = `Analyze this soccer game data and provide insights and forecasts:
+        
+        Game: ${game.name}
+        Status: ${game.status}
+
+        Standings:
+        ${standings.map(s => {
+          const team = game.teams?.find(t => t?.team.id === s.teamId);
+          return `${team?.team.name}: Played ${s.played}, Won ${s.won}, Drawn ${s.drawn}, Lost ${s.lost}, GF ${s.goalsFor}, GA ${s.goalsAgainst}, Points ${s.points}`;
+        }).join('\n')}
+
+        Recent Matches:
+        ${game.matches?.slice(-5).map(m => {
+          const homeTeam = game.teams?.find(t => t?.team.id === m?.homeTeamId);
+          const awayTeam = game.teams?.find(t => t?.team.id === m?.awayTeamId);
+          return `${homeTeam?.team.name} ${m?.homeScore} - ${m?.awayScore} ${awayTeam?.team.name}`;
+        }).join('\n')}
+
+        Please provide:
+        1. Key performance insights for each team
+        2. Trends in recent matches
+        3. Predictions for upcoming performance
+        4. Recommendations for improvement`;
+
+        const { data: summary, errors } = await client.generations
+          .generateInsights({ requirement: prompt });
+
+        if (errors) {
+          throw new Error(errors.map(e => e.message).join(', '));
+        }
+        
+        if (summary) {
+          // Cache the insights in localStorage
+          localStorage.setItem(`gameInsights-${game.id}-${cacheKey}`, summary.insights);
+          setInsights(summary.insights);
+        }
+      } catch (error) {
+        console.error('Error generating insights:', error);
+        setError('Failed to generate insights. Please try again later.');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateInsights();
+  }, [game, standings, getCacheKey]);
+
+  return (
+    <Paper className="p-4">
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <Typography variant="h4" className="text-gray-800">
+              🎭 Football Comedy Hour - Match Stories with a Twist
+            </Typography>
+            <Typography 
+              variant="subtitle2" 
+              className="text-gray-600 flex items-center gap-1"
+            >
+              <AutoGraphIcon fontSize="small" />
+              Powered by Amazon Bedrock
+            </Typography>
+          </div>
+        </div>
+
+        {error && (
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {isGenerating ? (
+          <div className="flex justify-center p-4">
+            <CircularProgress />
+          </div>
+        ) : insights ? (
+          <Paper className="p-4 whitespace-pre-line">
+            <Typography variant="body1">
+              {insights}
+            </Typography>
+          </Paper>
+        ) : (
+          <Paper className="p-4 text-center">
+            <Typography variant="body2" color="text.secondary">
+              Generating game insights and forecasts...
+            </Typography>
+          </Paper>
+        )}
+      </div>
+    </Paper>
+  );
+};
 
 export default function GameDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -839,100 +974,111 @@ export default function GameDetail({ params }: { params: { id: string } }) {
                         </div>
                       </Paper>
                     ) : (
-                      <Paper className="p-4">
-                        <div className="space-y-4">
-                          <Typography variant="h4" className="text-gray-800 mb-4">
-                            Standings
-                          </Typography>
-                          {game.teams && game.teams.length > 0 ? (
-                            <TableContainer>
-                              <Table size="small">
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell className="px-2">Team</TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Played</span>
-                                      <span className="sm:hidden">P</span>
-                                    </TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Won</span>
-                                      <span className="sm:hidden">W</span>
-                                    </TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Drawn</span>
-                                      <span className="sm:hidden">D</span>
-                                    </TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Lost</span>
-                                      <span className="sm:hidden">L</span>
-                                    </TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Goals For</span>
-                                      <span className="sm:hidden">GF</span>
-                                    </TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Goals Against</span>
-                                      <span className="sm:hidden">GA</span>
-                                    </TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Goal Diff</span>
-                                      <span className="sm:hidden">GD</span>
-                                    </TableCell>
-                                    <TableCell align="center" className="px-1">
-                                      <span className="hidden sm:inline">Points</span>
-                                      <span className="sm:hidden">Pts</span>
-                                    </TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {calculateStandings(game.matches?.filter((match): match is Schema['Match']['type'] => match !== null && match !== undefined) || [], game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [])
-                                    .sort((a, b) => 
-                                      b.points - a.points || // Sort by points
-                                      (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || // Then by goal difference
-                                      b.goalsFor - a.goalsFor // Then by goals scored
-                                    )
-                                    .map((standing) => {
-                                      const team = getTeamById(game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [], standing.teamId);
-                                      if (!team) return null;
+                      <>
+                        {game.status === 'active' && (
+                          <GameInsights 
+                            game={game} 
+                            standings={calculateStandings(
+                              game.matches?.filter((match): match is Schema['Match']['type'] => match !== null && match !== undefined) || [], 
+                              game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || []
+                            )} 
+                          />
+                        )}
+                        <Paper className="p-4">
+                          <div className="space-y-4">
+                            <Typography variant="h4" className="text-gray-800 mb-4">
+                              Standings
+                            </Typography>
+                            {game.teams && game.teams.length > 0 ? (
+                              <TableContainer>
+                                <Table size="small">
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell className="px-2">Team</TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Played</span>
+                                        <span className="sm:hidden">P</span>
+                                      </TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Won</span>
+                                        <span className="sm:hidden">W</span>
+                                      </TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Drawn</span>
+                                        <span className="sm:hidden">D</span>
+                                      </TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Lost</span>
+                                        <span className="sm:hidden">L</span>
+                                      </TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Goals For</span>
+                                        <span className="sm:hidden">GF</span>
+                                      </TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Goals Against</span>
+                                        <span className="sm:hidden">GA</span>
+                                      </TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Goal Diff</span>
+                                        <span className="sm:hidden">GD</span>
+                                      </TableCell>
+                                      <TableCell align="center" className="px-1">
+                                        <span className="hidden sm:inline">Points</span>
+                                        <span className="sm:hidden">Pts</span>
+                                      </TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {calculateStandings(game.matches?.filter((match): match is Schema['Match']['type'] => match !== null && match !== undefined) || [], game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [])
+                                      .sort((a, b) => 
+                                        b.points - a.points || // Sort by points
+                                        (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) || // Then by goal difference
+                                        b.goalsFor - a.goalsFor // Then by goals scored
+                                      )
+                                      .map((standing) => {
+                                        const team = getTeamById(game.teams?.filter((team): team is Schema['TeamPlayer']['type'] => team !== null && team !== undefined) || [], standing.teamId);
+                                        if (!team) return null;
 
-                                      return (
-                                        <TableRow key={standing.teamId}>
-                                          <TableCell className="px-2">
-                                            <div className="flex items-center gap-1">
-                                              <Avatar
-                                                src={team.team.logo || ''}
-                                                alt={team.team.name}
-                                                sx={{ width: { xs: 16, sm: 24 }, height: { xs: 16, sm: 24 } }}
-                                                variant="rounded"
-                                              />
-                                              <span className="truncate max-w-[80px] sm:max-w-none">
-                                                {team.team.name}
-                                              </span>
-                                            </div>
-                                          </TableCell>
-                                          <TableCell align="center" className="px-1">{standing.played}</TableCell>
-                                          <TableCell align="center" className="px-1">{standing.won}</TableCell>
-                                          <TableCell align="center" className="px-1">{standing.drawn}</TableCell>
-                                          <TableCell align="center" className="px-1">{standing.lost}</TableCell>
-                                          <TableCell align="center" className="px-1">{standing.goalsFor}</TableCell>
-                                          <TableCell align="center" className="px-1">{standing.goalsAgainst}</TableCell>
-                                          <TableCell align="center" className="px-1">{standing.goalsFor - standing.goalsAgainst}</TableCell>
-                                          <TableCell align="center" className="px-1">{standing.points}</TableCell>
-                                        </TableRow>
-                                      );
-                                    })}
-                                </TableBody>
-                              </Table>
-                            </TableContainer>
-                          ) : (
-                            <Paper className="p-4 sm:p-6 text-center w-full">
-                              <Typography variant="body2" className="text-gray-600">
-                                No teams available.
-                              </Typography>
-                            </Paper>
-                          )}
-                        </div>
-                      </Paper>
+                                        return (
+                                          <TableRow key={standing.teamId}>
+                                            <TableCell className="px-2">
+                                              <div className="flex items-center gap-1">
+                                                <Avatar
+                                                  src={team.team.logo || ''}
+                                                  alt={team.team.name}
+                                                  sx={{ width: { xs: 16, sm: 24 }, height: { xs: 16, sm: 24 } }}
+                                                  variant="rounded"
+                                                />
+                                                <span className="truncate max-w-[80px] sm:max-w-none">
+                                                  {team.team.name}
+                                                </span>
+                                              </div>
+                                            </TableCell>
+                                            <TableCell align="center" className="px-1">{standing.played}</TableCell>
+                                            <TableCell align="center" className="px-1">{standing.won}</TableCell>
+                                            <TableCell align="center" className="px-1">{standing.drawn}</TableCell>
+                                            <TableCell align="center" className="px-1">{standing.lost}</TableCell>
+                                            <TableCell align="center" className="px-1">{standing.goalsFor}</TableCell>
+                                            <TableCell align="center" className="px-1">{standing.goalsAgainst}</TableCell>
+                                            <TableCell align="center" className="px-1">{standing.goalsFor - standing.goalsAgainst}</TableCell>
+                                            <TableCell align="center" className="px-1">{standing.points}</TableCell>
+                                          </TableRow>
+                                        );
+                                      })}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                            ) : (
+                              <Paper className="p-4 sm:p-6 text-center w-full">
+                                <Typography variant="body2" className="text-gray-600">
+                                  No teams available.
+                                </Typography>
+                              </Paper>
+                            )}
+                          </div>
+                        </Paper>
+                      </>
                     )}
                     {game.status === 'active' || game.status === 'completed' ? (
                       <Paper className="p-4">

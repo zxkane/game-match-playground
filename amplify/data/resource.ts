@@ -1,3 +1,4 @@
+import { LLM_MODEL, LLM_SYSTEM_PROMPT } from '@/constant';
 import { a, defineData, type ClientSchema, defineFunction, secret } from '@aws-amplify/backend';
 
 const leaguesHandler = defineFunction({
@@ -297,6 +298,22 @@ const schema = a.schema({
         entry: './game-viewers-subscription-handler.js',
       }),
     ),
+
+  generateInsights: a.generation({
+    aiModel: a.ai.model(LLM_MODEL),
+    systemPrompt: LLM_SYSTEM_PROMPT,
+    inferenceConfiguration: {
+      maxTokens: 1000,
+      temperature: 0.65,
+    },
+  })
+  .arguments({
+    requirement: a.string().required(),
+    })
+    .returns(a.customType({
+      insights: a.string().required(),
+    }))
+    .authorization(allow => [allow.authenticated()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
