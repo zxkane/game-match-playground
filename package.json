@@ -10,10 +10,10 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@aws-amplify/backend": "^1.8.0",
-    "@aws-amplify/backend-auth": "^1.4.1",
-    "@aws-amplify/backend-cli": "^1.4.2",
-    "@aws-amplify/ui-react": "^6.7.1",
+    "@aws-amplify/backend": "^1.9.0",
+    "@aws-amplify/backend-auth": "^1.4.2",
+    "@aws-amplify/backend-cli": "^1.4.3",
+    "@aws-amplify/ui-react": "^6.7.2",
     "@aws-amplify/ui-react-ai": "^1.1.0",
     "@aws-lambda-powertools/logger": "^2.11.0",
     "@aws-sdk/client-dynamodb": "^3.699.0",
@@ -25,7 +25,7 @@
     "@mui/material": "^6.1.8",
     "@mui/x-data-grid": "^7.22.3",
     "@mui/x-date-pickers": "^7.23.0",
-    "aws-amplify": "^6.10.2",
+    "aws-amplify": "^6.10.3",
     "axios": "^1.7.8",
     "date-fns": "^3.6.0",
     "next": "^14.2",
