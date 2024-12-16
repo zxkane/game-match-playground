@@ -1,7 +1,7 @@
-import { LLM_MODEL, LLM_SYSTEM_PROMPT } from '@/constant';
+import { LLM_MODEL, LLM_SYSTEM_PROMPT, FOOTBALL_SYSTEM_PROMPT } from '@/constant';
 import { a, defineData, type ClientSchema, defineFunction, secret } from '@aws-amplify/backend';
 
-const leaguesHandler = defineFunction({
+export const leaguesHandler = defineFunction({
   entry: './league-handler/leagues.ts',
   runtime: 20,
 })
@@ -314,6 +314,11 @@ const schema = a.schema({
       insights: a.string().required(),
     }))
     .authorization(allow => [allow.authenticated()]),
+
+  chat: a.conversation({
+    aiModel: a.ai.model(LLM_MODEL),
+    systemPrompt: FOOTBALL_SYSTEM_PROMPT,
+  }).authorization(allow => allow.owner()),
 });
 
 export type Schema = ClientSchema<typeof schema>;

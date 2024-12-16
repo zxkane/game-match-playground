@@ -22,6 +22,8 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useRouter } from 'next/navigation';
 import { stringAvatar } from '@/utils/avatar';
+import ChatBotContainer from '@/components/ChatBotContainer';
+import { ConversationsProvider } from '../providers/ConversationsProvider';
 
 const drawerWidth = 240;
 
@@ -413,6 +415,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {children}
           </Paper>
         </Box>
+        <ConversationsProvider autoLoad={true}>
+          <ChatBotContainer email={userEmail} />
+        </ConversationsProvider>
       </Box>
     </MUIThemeProvider>
   );

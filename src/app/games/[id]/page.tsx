@@ -51,7 +51,6 @@ import { createAIHooks } from "@aws-amplify/ui-react-ai";
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 const client = generateClient<Schema>();
-const { useAIGeneration } = createAIHooks(client);
 
 type GameStatus = 'active' | 'completed' | 'deleted';
 
