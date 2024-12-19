@@ -8,6 +8,7 @@ interface ChatBotContainerProps {
 
 export default function ChatBotContainer({ email }: ChatBotContainerProps) {
   const [selectedChatId, setSelectedChatId] = useState<{ chatid: string } | undefined>();
+  const [refreshKey, setRefreshKey] = useState(0);
   const { 
     conversations, 
     createConversation, 
@@ -49,12 +50,16 @@ export default function ChatBotContainer({ email }: ChatBotContainerProps) {
   if (selectedChatId) {
     return (
       <ChatBot
+        key={selectedChatId.chatid}
+        refreshKey={refreshKey}
         email={email}
         chatId={selectedChatId.chatid}
-        onStartNewChat={handleStartNewChat}
+        onStartNewChat={()=>{
+          setRefreshKey(prev => prev + 1);
+          handleStartNewChat();
+        }}
         onLoadConversations={handleLoadConversations}
-        isLoading={isLoadingConversations}
-      />
+        isLoading={isLoadingConversations} />
     );
   }
 

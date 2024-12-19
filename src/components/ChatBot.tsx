@@ -20,27 +20,37 @@ const { useAIConversation } = createAIHooks(client);
 interface ChatBotProps {
   email: string;
   chatId?: string;
+  refreshKey: number;
   onStartNewChat: () => void;
   onLoadConversations: () => void;
   isLoading: boolean;
-  refreshKey: number;
 }
 
 export default function ChatBot({ 
   email, 
   chatId,
+  refreshKey,
   onStartNewChat,
   onLoadConversations,
   isLoading 
 }: ChatBotProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(refreshKey > 0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [chatMessages, setChatMessages] = useState([]);
 
   const conversation = useAIConversation('chat', {
     id: chatId,
   });
   const [{ data: { messages }, isLoading: isLoadingChat }, sendMessage] = conversation;
+  
+  useEffect(() => {
+    console.log('chatId', chatId);
+  }, [chatId]);
+
+  useEffect(() => {
+    console.log('messages', messages);
+  }, [messages]);
+  
+  
 
   const handleOpen = () => {
     setOpen(true);
@@ -102,7 +112,7 @@ export default function ChatBot({
                 <span>Personalized Chat</span>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {/* <Tooltip title="Start new chat">
+                <Tooltip title="Start new chat">
                   <IconButton
                     size="small"
                     onClick={handleNewChat}
@@ -110,7 +120,7 @@ export default function ChatBot({
                   >
                     <AddIcon />
                   </IconButton>
-                </Tooltip> */}
+                </Tooltip>
                 <IconButton
                   size="small"
                   onClick={handleClose}
@@ -123,6 +133,7 @@ export default function ChatBot({
 
             <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
               <AIConversation
+                key={chatId}
                 allowAttachments
                 messages={messages}
                 handleSendMessage={sendMessage}
