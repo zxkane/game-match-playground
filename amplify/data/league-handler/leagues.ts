@@ -1,7 +1,7 @@
 import type { Schema } from '../resource';
 import leagues from './football/leagues.json';
 
-export const handler: Schema["leagues"]["functionHandler"] = async (event, context) => {
+export const handler: Schema["leagues"]["functionHandler"] = async (event, _context) => {
   const { countryCode } = event.arguments;
 
   const sortedLeagues = leagues

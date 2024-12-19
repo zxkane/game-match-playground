@@ -55,7 +55,6 @@ export const WELCOME_MESSAGE = process.env.NEXT_PUBLIC_WELCOME_MESSAGE ||
 `Hello! I'm your football expert assistant. Ask me anything about football, teams, players, tactics, and rules!`;
 
 // custom model
-
 const validModels = ['Claude 3.5 Sonnet', 'Claude 3.5 Haiku', 'Claude 3.5 Sonnet v2'] as const;
 type ValidModel = typeof validModels[number];
 

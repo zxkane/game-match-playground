@@ -4,5 +4,6 @@
   ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  }
+  },
+  "remote.autoForwardPortsFallback": 0
 } 

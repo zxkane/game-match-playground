@@ -1,4 +1,10 @@
-import { LLM_MODEL, LLM_SYSTEM_PROMPT, FOOTBALL_SYSTEM_PROMPT, CUSTOM_MODEL_ID, CROSS_REGION_INFERENCE } from '@/constant';
+import { 
+  LLM_MODEL, 
+  LLM_SYSTEM_PROMPT, 
+  FOOTBALL_SYSTEM_PROMPT, 
+  CUSTOM_MODEL_ID, 
+  CROSS_REGION_INFERENCE 
+} from '../constants';
 import { a, defineData, type ClientSchema, defineFunction, secret } from '@aws-amplify/backend';
 import { getCrossRegionModelId, getCurrentRegion } from '../utils';
 
