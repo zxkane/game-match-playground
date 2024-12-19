@@ -42,16 +42,6 @@ export default function ChatBot({
   });
   const [{ data: { messages }, isLoading: isLoadingChat }, sendMessage] = conversation;
   
-  useEffect(() => {
-    console.log('chatId', chatId);
-  }, [chatId]);
-
-  useEffect(() => {
-    console.log('messages', messages);
-  }, [messages]);
-  
-  
-
   const handleOpen = () => {
     setOpen(true);
     onLoadConversations();

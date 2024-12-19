@@ -1,8 +1,10 @@
 export const SITE_TITLE = 'FC Game Playground';
 
+// for auth
 export const isGoogleAuthEnabled = process.env.NEXT_PUBLIC_AUTH_EXTERNAL_PROVIDERS?.includes('google') || false;
 export const oidcProvider = process.env.NEXT_PUBLIC_AUTH_OIDC_PROVIDER;
 
+// for llm
 export const LLM_SYSTEM_PROMPT = process.env.LLM_SYSTEM_PROMPT || `You are an elite football analyst with expertise in European and international football competitions. Your analysis should be:
 
 1. Professional, objective, and based on statistical data and tactical observations
@@ -48,6 +50,12 @@ When interacting:
 - Engage in respectful debates about football topics
 - Acknowledge the emotional aspects of being a football fan`;
 
+export const AI_CHAT_BOT_NAME = process.env.NEXT_PUBLIC_AI_CHAT_BOT_NAME || "Football Expert";
+export const WELCOME_MESSAGE = process.env.NEXT_PUBLIC_WELCOME_MESSAGE || 
+`Hello! I'm your football expert assistant. Ask me anything about football, teams, players, tactics, and rules!`;
+
+// custom model
+
 const validModels = ['Claude 3.5 Sonnet', 'Claude 3.5 Haiku', 'Claude 3.5 Sonnet v2'] as const;
 type ValidModel = typeof validModels[number];
 
@@ -62,6 +70,6 @@ if (!isValidModel(LLM_MODEL)) {
   throw new Error(`Invalid LLM model: ${LLM_MODEL}`);
 }
 
-export const AI_CHAT_BOT_NAME = process.env.NEXT_PUBLIC_AI_CHAT_BOT_NAME || "Football Expert";
-export const WELCOME_MESSAGE = process.env.NEXT_PUBLIC_WELCOME_MESSAGE || 
-`Hello! I'm your football expert assistant. Ask me anything about football, teams, players, tactics, and rules!`;
+export const CUSTOM_MODEL_ID = process.env.CUSTOM_MODEL_ID;
+export const CROSS_REGION_INFERENCE = (CUSTOM_MODEL_ID && process.env.CROSS_REGION_INFERENCE && (process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION)) 
+? process.env.CROSS_REGION_INFERENCE.toLowerCase() === 'true' : false;

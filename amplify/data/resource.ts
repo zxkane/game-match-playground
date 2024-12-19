@@ -1,5 +1,6 @@
-import { LLM_MODEL, LLM_SYSTEM_PROMPT, FOOTBALL_SYSTEM_PROMPT } from '@/constant';
+import { LLM_MODEL, LLM_SYSTEM_PROMPT, FOOTBALL_SYSTEM_PROMPT, CUSTOM_MODEL_ID, CROSS_REGION_INFERENCE } from '@/constant';
 import { a, defineData, type ClientSchema, defineFunction, secret } from '@aws-amplify/backend';
+import { getCrossRegionModelId, getCurrentRegion } from '../utils';
 
 export const leaguesHandler = defineFunction({
   entry: './league-handler/leagues.ts',
@@ -300,7 +301,9 @@ const schema = a.schema({
     ),
 
   generateInsights: a.generation({
-    aiModel: a.ai.model(LLM_MODEL),
+    aiModel: CROSS_REGION_INFERENCE ? {
+      resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
+     } : a.ai.model(LLM_MODEL),
     systemPrompt: LLM_SYSTEM_PROMPT,
     inferenceConfiguration: {
       maxTokens: 1000,
@@ -316,7 +319,9 @@ const schema = a.schema({
     .authorization(allow => [allow.authenticated()]),
 
   chat: a.conversation({
-    aiModel: a.ai.model(LLM_MODEL),
+    aiModel: CROSS_REGION_INFERENCE ? {
+      resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
+     } : a.ai.model(LLM_MODEL),
     systemPrompt: FOOTBALL_SYSTEM_PROMPT,
   }).authorization(allow => allow.owner()),
 });
