@@ -5,7 +5,8 @@ import '@aws-amplify/ui-react/styles.css';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { isGoogleAuthEnabled, oidcProvider, SITE_TITLE } from '../constant';
-import { fetchUserAttributes, signInWithRedirect } from 'aws-amplify/auth';
+import { fetchUserAttributes, getCurrentUser, signInWithRedirect } from 'aws-amplify/auth';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 function SignInHeader() {
   return (
@@ -32,20 +33,16 @@ export default function Home() {
   useEffect(() => {
     const getUserEmail = async () => {
       try {
+        await getCurrentUser();
         const attributes = await fetchUserAttributes();
         setUserEmail(attributes.email || '');
       } catch (error) {
         console.debug('Error fetching user attributes:', error);
+        setUserEmail('');
       }
     };
     getUserEmail();
   }, []);
-
-  useEffect(() => {
-    if (userEmail) {
-      router.push('/games');
-    }
-  }, [userEmail, router]);
 
   if (!userEmail) {
     return (
@@ -100,7 +97,21 @@ export default function Home() {
           initialState="signIn"
           socialProviders={isGoogleAuthEnabled ? ['google'] : []}
           hideSignUp={Boolean(oidcProvider || isGoogleAuthEnabled)}
-        />
+        >
+          {({ user }) => {
+            if (user) {
+              router.push('/games');
+            }
+            return (
+              <div>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <CircularProgress />
+                  <Typography>Page is preparing...</Typography>
+                </Box>
+              </div>
+            );
+          }}
+        </Authenticator>
       </div>
     );
   }
