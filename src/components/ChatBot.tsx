@@ -106,7 +106,9 @@ export default function ChatBot({
                   <IconButton
                     size="small"
                     onClick={handleNewChat}
+                    onTouchEnd={handleNewChat}
                     aria-label="new chat"
+                    sx={{ touchAction: 'none' }}
                   >
                     <AddIcon />
                   </IconButton>
@@ -114,7 +116,9 @@ export default function ChatBot({
                 <IconButton
                   size="small"
                   onClick={handleClose}
+                  onTouchEnd={handleClose}
                   aria-label="close chat"
+                  sx={{ touchAction: 'none' }}
                 >
                   <CloseIcon />
                 </IconButton>
