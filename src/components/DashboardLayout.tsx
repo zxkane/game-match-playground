@@ -36,6 +36,11 @@ const StyledAppBar = styled(MuiAppBar, {
 })<AppBarProps>(({ theme, open }) => ({
   background: `linear-gradient(45deg, var(--amplify-colors-font-interactive) 30%, var(--amplify-colors-font-primary) 90%)`,
   boxShadow: `0 3px 5px 2px rgba(139, 69, 19, .3)`,
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  zIndex: theme.zIndex.drawer + 1,
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -59,11 +64,16 @@ const StyledDrawer = styled(MuiDrawer)(() => ({
   },
 }));
 
-const DrawerHeader = styled('div')(() => ({
+const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: '0 8px',
-  minHeight: 64,
+  ...theme.breakpoints.up('xs') && {
+    minHeight: 48,
+  },
+  ...theme.breakpoints.up('sm') && {
+    minHeight: 64,
+  },
   justifyContent: 'space-between',
   width: '100%',
 }));
@@ -265,7 +275,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <Toolbar 
             sx={{ 
               justifyContent: 'space-between',
-              px: { xs: 1, sm: 2 }
+              px: { xs: 1, sm: 2 },
+              minHeight: { xs: '36px !important', sm: '48px !important' },
+              height: { xs: 36, sm: 48 }
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -394,7 +406,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           component="main"
           sx={{
             flexGrow: 1,
-            p: { xs: 1, sm: 2, md: 3 },
+            p: { xs: 1, sm: 1.5, md: 2 },
             transition: theme => theme.transitions.create('margin', {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.leavingScreen,
@@ -408,9 +420,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               marginLeft: 0,
             }),
             backgroundColor: 'var(--amplify-colors-background-secondary)',
+            marginTop: { xs: '48px', sm: '64px' }
           }}
         >
-          <DrawerHeader />
           <Paper elevation={3}>
             {children}
           </Paper>
