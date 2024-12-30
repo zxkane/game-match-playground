@@ -16,8 +16,8 @@ import { useUser } from '../context/UserContext';
 import { Divider, Paper, Avatar, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import { useTheme } from '@aws-amplify/ui-react';
 import type {} from '@mui/x-data-grid/themeAugmentation';
-import { themeIcons } from '../app/layout';
-import { SITE_TITLE } from '../constant';
+import { themeConfigurations } from '../app/layout';
+import { DEFAULT_THEME, SITE_TITLE, ThemeKey } from '../constant';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useRouter } from 'next/navigation';
@@ -91,10 +91,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   
   // Get the current theme key
-  const currentTheme = (process.env.NEXT_PUBLIC_SITE_THEME || 'christmas') as keyof typeof themeIcons;
+  const currentTheme = (process.env.NEXT_PUBLIC_SITE_THEME as ThemeKey) || DEFAULT_THEME;
   
   // Get theme-specific icons
-  const { primary: PrimaryIcon, secondary: SecondaryIcon } = themeIcons[currentTheme];
+  const { primary: PrimaryIcon, secondary: SecondaryIcon } = themeConfigurations[currentTheme];
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -299,10 +299,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="header-text"
                 sx={{ 
                   display: { xs: 'none', sm: 'block' },
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  color: 'var(--amplify-colors-font-secondary) !important'
                 }}
               >
-                {SITE_TITLE} - {currentTheme.toUpperCase()}
+                {SITE_TITLE} - {themeConfigurations[currentTheme].drawer.blessing}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -368,8 +369,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               color: 'var(--amplify-colors-background-primary)',
             }}
           >
-            <Typography variant="h6" sx={{ flexGrow: 1, ml: 2, textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
-              {themeIcons[currentTheme].drawer.icon} {themeIcons[currentTheme].drawer.title}
+            <Typography variant="h6" sx={{ 
+              flexGrow: 1, 
+              ml: 2, 
+              textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+              color: 'var(--amplify-colors-font-secondary) !important'
+            }}>
+              {themeConfigurations[currentTheme].drawer.icon} {themeConfigurations[currentTheme].drawer.title}
             </Typography>
             <IconButton 
               onClick={handleDrawerClose}

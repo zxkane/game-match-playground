@@ -72,3 +72,9 @@ if (!isValidModel(LLM_MODEL)) {
 export const CUSTOM_MODEL_ID = process.env.CUSTOM_MODEL_ID;
 export const CROSS_REGION_INFERENCE = (CUSTOM_MODEL_ID && process.env.CROSS_REGION_INFERENCE && (process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION)) 
 ? process.env.CROSS_REGION_INFERENCE.toLowerCase() === 'true' : false;
+
+// Theme constants
+export const AVAILABLE_THEMES = ['thanksgiving', 'christmas', 'chineseNewYearSnake'] as const;
+export type ThemeKey = typeof AVAILABLE_THEMES[number];
+
+export const DEFAULT_THEME: ThemeKey = 'chineseNewYearSnake';

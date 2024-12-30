@@ -8,18 +8,21 @@ import RestaurantIcon from '@mui/icons-material/Restaurant';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
-import { SITE_TITLE } from '../constant';
+import CelebrationOutlinedIcon from '@mui/icons-material/CelebrationOutlined';
+import PetsIcon from '@mui/icons-material/Pets';
+import { DEFAULT_THEME, SITE_TITLE, ThemeKey } from '../constant';
 
 const inter = Inter({ subsets: ['latin'] });
 
-// Theme-specific icons
-export const themeIcons = {
+// Theme-specific configurations
+export const themeConfigurations = {
   thanksgiving: {
     primary: RestaurantIcon,
     secondary: SportsEsportsIcon,
     drawer: {
       icon: '🦃',
-      title: SITE_TITLE
+      title: SITE_TITLE,
+      blessing: 'Grateful Hearts, Happy Games!'
     }
   },
   christmas: {
@@ -27,13 +30,55 @@ export const themeIcons = {
     secondary: CardGiftcardIcon,
     drawer: {
       icon: '🎄',
-      title: SITE_TITLE
+      title: SITE_TITLE,
+      blessing: 'Joy to the Games!'
+    }
+  },
+  chineseNewYearSnake: {
+    primary: CelebrationOutlinedIcon,
+    secondary: PetsIcon,
+    drawer: {
+      icon: '🐍',
+      title: SITE_TITLE,
+      blessing: '蛇年大吉，游戏常胜！'
     }
   },
 } as const;
 
 // Theme definitions
 const themes = {
+  chineseNewYearSnake: createTheme({
+    name: 'chinese-new-year-theme',
+    tokens: {
+      colors: {
+        background: {
+          primary: { value: '#FFEFEF' },    // Light red background
+          secondary: { value: '#C41E3A' },  // Chinese red
+        },
+        font: {
+          interactive: { value: '#FF3333' }, // Brighter red
+          primary: { value: '#E60000' },     // Vivid red
+          secondary: { value: '#FFD700' },    // Pure gold
+          accent: { value: '#FFC107' },       // Vivid amber
+        },
+        border: {
+          primary: { value: '#C41E3A' },     // Chinese red
+        },
+      },
+      components: {
+        button: {
+          primary: {
+            backgroundColor: { value: '#C41E3A' },
+            color: { value: '#FFD700' },
+            _hover: {
+              backgroundColor: { value: '#8B0000' },
+            },
+          },
+        },
+      },
+    },
+    overrides: [defaultDarkModeOverride],
+  }),
   thanksgiving: createTheme({
     name: 'thanksgiving-theme',
     tokens: {
@@ -101,10 +146,8 @@ const themes = {
   })
 } as const;
 
-type ThemeKey = keyof typeof themes;
-
 // Select theme based on environment variable
-const themeKey = (process.env.NEXT_PUBLIC_SITE_THEME as ThemeKey) || 'christmas';
+const themeKey = (process.env.NEXT_PUBLIC_SITE_THEME as ThemeKey) || DEFAULT_THEME;
 const selectedTheme = themes[themeKey] || themes.christmas;
 
 export default function RootLayout({
