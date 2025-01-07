@@ -1,12 +1,12 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
-import { data, leagueHandler } from './data/resource';
+import { data, leagueHandler, standingsHandler } from './data/resource';
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { Table, AttributeType, BillingMode } from 'aws-cdk-lib/aws-dynamodb';
 import { IRole, PolicyStatement, Policy } from 'aws-cdk-lib/aws-iam';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { CfnFunction } from 'aws-cdk-lib/aws-lambda';
-import { CROSS_REGION_INFERENCE, CUSTOM_MODEL_ID } from './constants';
+import { CROSS_REGION_INFERENCE, CUSTOM_MODEL_ID, isDevelopment } from './constants';
 import { getCrossRegionModelId, getCurrentRegion } from './utils';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 
@@ -14,6 +14,7 @@ export const backend = defineBackend({
   auth,
   data,
   leagueHandler,
+  standingsHandler,
 });
 
 const externalTableStack = backend.createStack('ExternalTableStack');
@@ -33,12 +34,9 @@ backend.data.addDynamoDbDataSource(
 );
 
 leagueTable.grantReadWriteData(backend.leagueHandler.resources.lambda);
-(backend.leagueHandler.resources.lambda.node.defaultChild as CfnFunction).addPropertyOverride('LoggingConfig', {
-  LogFormat: 'JSON',
-  ApplicationLogLevel: process.env.PRODUCTION ? 'WARN' : 'TRACE',
-  SystemLogLevel: 'INFO',
-});
+addLoggingConfigOverride(backend.leagueHandler.resources.lambda.node.defaultChild as CfnFunction);
 (backend.leagueHandler.resources.lambda as NodejsFunction).addEnvironment('LEAGUE_TABLE_NAME', leagueTable.tableName);
+addLoggingConfigOverride(backend.standingsHandler.resources.lambda.node.defaultChild as CfnFunction);
 
 // specify the ttl for gameviewer table
 const gameViewerTable = backend.data.resources.cfnResources.amplifyDynamoDbTables?.['GameViewer'];
@@ -91,4 +89,12 @@ if (CROSS_REGION_INFERENCE && CUSTOM_MODEL_ID) {
       );
     }
   }
+}
+
+function addLoggingConfigOverride(lambdaFunction: CfnFunction) {
+  lambdaFunction.addPropertyOverride('LoggingConfig', {
+    LogFormat: 'JSON',
+    ApplicationLogLevel: isDevelopment ? 'TRACE' : 'WARN',
+    SystemLogLevel: 'INFO',
+  });
 }

@@ -1,5 +1,7 @@
 import type { AuthConfig, LLMConfig, AllowedModel } from '../src/types/config';
 
+export const isDevelopment = process.env.NODE_ENV === 'development';
+
 export const authConfig: AuthConfig = {
   isGoogleAuthEnabled: process.env.GOOGLE_AUTH_ENABLED === 'true',
   oidcProvider: process.env.AUTH_OIDC_PROVIDER || process.env.NEXT_PUBLIC_AUTH_OIDC_PROVIDER

@@ -22,6 +22,15 @@ export const leagueHandler = defineFunction({
   }
 })
 
+export const standingsHandler = defineFunction({
+  entry: './league-handler/standings.ts',
+  runtime: 20,
+  timeoutSeconds: 30,
+  environment: {
+    RAPID_API_KEY: secret('RAPID_API_KEY'),
+  }
+})
+
 const schema = a.schema({
   GameStatus: a.enum(['draft', 'active', 'completed', 'deleted']),
   SimpleTeam: a.customType({
@@ -324,12 +333,112 @@ const schema = a.schema({
     }))
     .authorization(allow => [allow.authenticated()]),
 
+  getCurrentDate: a.query()
+    .returns(a.customType({
+      currentDate: a.string().required(),
+      season: a.integer().required(),
+    }))
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.custom({
+      entry: './get-current-date-handler.js'
+    })),
+
   chat: a.conversation({
     aiModel: CROSS_REGION_INFERENCE ? {
       resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
      } : a.ai.model(LLM_MODEL),
-    systemPrompt: FOOTBALL_SYSTEM_PROMPT,
+    systemPrompt: `${FOOTBALL_SYSTEM_PROMPT}
+
+When asked about current standings or this season's standings, first use getCurrentDate to determine the correct season, then use that season parameter with the standings query.
+For example:
+1. Get current date -> returns season 2023 (for dates between Jan-Jun 2024) or 2024 (for dates between Jul-Dec 2024)
+2. Use that season number in the standings query`,
+    tools: [
+      a.ai.dataTool({
+        name: 'leagues',
+        description: `
+          Get a list of available leagues and their IDs.
+          Use this first to find the league ID when user mentions a league by name.
+          You can filter by countryCode.
+        `.trim().replace(/\n\s+/g, ' '),
+        query: a.ref('leagues'),
+      }),
+      a.ai.dataTool({
+        name: 'standings',
+        description: `
+          Get current standings for a specific league and season. It also includes the home and away performances of the team.
+          Use this after finding the league ID to get standings information.
+          Use the start year of the season as the season parameter, for example, 2024 for the 2024/2025 season.
+        `.trim().replace(/\n\s+/g, ' '),
+        query: a.ref('standings'),
+      }),
+      a.ai.dataTool({
+        name: 'getCurrentDate',
+        description: `
+          Get the current date to determine the current football season.
+          For dates between July and December, use that year as the season.
+          For dates between January and June, use the previous year as the season.
+          For example: If current date is April 2024, use 2023 as season. If current date is August 2024, use 2024 as season.
+        `.trim().replace(/\n\s+/g, ' '),
+        query: a.ref('getCurrentDate'),
+      }),
+    ],
   }).authorization(allow => allow.owner()),
+
+  LeagueStanding: a.customType({
+    rank: a.integer().required(),
+    team: a.customType({
+      id: a.integer().required(),
+      name: a.string().required(),
+      logo: a.string().required(),
+    }),
+    points: a.integer().required(),
+    goalsDiff: a.integer().required(),
+    group: a.string(),
+    form: a.string(),
+    status: a.string(),
+    description: a.string(),
+    all: a.customType({
+      played: a.integer().required(),
+      win: a.integer().required(),
+      draw: a.integer().required(),
+      lose: a.integer().required(),
+      goals: a.customType({
+        for: a.integer().required(),
+        against: a.integer().required(),
+      }),
+    }),
+    home: a.customType({
+      played: a.integer().required(),
+      win: a.integer().required(),
+      draw: a.integer().required(),
+      lose: a.integer().required(),
+      goals: a.customType({
+        for: a.integer().required(),
+        against: a.integer().required(),
+      }),
+    }),
+    away: a.customType({
+      played: a.integer().required(),
+      win: a.integer().required(),
+      draw: a.integer().required(),
+      lose: a.integer().required(),
+      goals: a.customType({
+        for: a.integer().required(),
+        against: a.integer().required(),
+      }),
+    }),
+    update: a.string().required(),
+  }),
+
+  standings: a.query()
+    .arguments({
+      leagueId: a.integer().required(),
+      season: a.integer().required(),
+    })
+    .returns(a.ref('LeagueStanding').array())
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.function(standingsHandler)),
 });
 
 export type Schema = ClientSchema<typeof schema>;

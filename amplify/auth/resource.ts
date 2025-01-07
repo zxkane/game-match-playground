@@ -1,8 +1,7 @@
-import { authConfig } from '../constants';
+import { authConfig, isDevelopment } from '../constants';
 import { defineAuth, secret } from '@aws-amplify/backend';
 
 const { isGoogleAuthEnabled, oidcProvider } = authConfig;
-const isDevelopment = process.env.NODE_ENV === 'development';
 const productionDomain = process.env.PRODUCTION_DOMAIN;
 const oidcProviderIssuerUrl = process.env.AUTH_OIDC_PROVIDER_ISSUER_URL;
 
