@@ -26,6 +26,25 @@ function SignInHeader() {
   );
 }
 
+function AuthenticatedRoute({ user }: { user: any }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.push('/games');
+    }
+  }, [user, router]);
+
+  return (
+    <div>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <CircularProgress />
+        <Typography>Page is preparing...</Typography>
+      </Box>
+    </div>
+  );
+}
+
 export default function Home() {
   const [userEmail, setUserEmail] = useState<string>('');
   const router = useRouter();
@@ -98,19 +117,7 @@ export default function Home() {
           socialProviders={isGoogleAuthEnabled ? ['google'] : []}
           hideSignUp={Boolean(oidcProvider || isGoogleAuthEnabled)}
         >
-          {({ user }) => {
-            if (user) {
-              router.push('/games');
-            }
-            return (
-              <div>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                  <CircularProgress />
-                  <Typography>Page is preparing...</Typography>
-                </Box>
-              </div>
-            );
-          }}
+          {({ user }) => <AuthenticatedRoute user={user} />}
         </Authenticator>
       </div>
     );

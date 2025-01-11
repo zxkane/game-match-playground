@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateClient } from 'aws-amplify/api';
 import { Schema } from '../../../../amplify/data/resource';
@@ -47,7 +47,6 @@ import Image from 'next/image';
 import { getCurrentUser } from 'aws-amplify/auth';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import { stringToColor, stringAvatar } from '@/utils/avatar';
-import { createAIHooks } from "@aws-amplify/ui-react-ai";
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 const client = generateClient<Schema>();
@@ -200,7 +199,12 @@ const GameInsights: React.FC<GameInsightsProps> = ({ game, standings }) => {
   );
 };
 
-export default function GameDetail({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function GameDetail({ params }: PageProps) {
+  const resolvedParams = use(params) as { id: string };
   const router = useRouter();
   const [game, setGame] = useState<Schema['Game']['type'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -258,7 +262,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     try {
       setIsLoading(true);
       const gameResult = await client.models.Game.get({
-        id: params.id
+        id: resolvedParams.id
       }, {
         selectionSet: ['id', 'name', 'owner', 'description', 'status', 'teams.*', 'matches.*', 'createdAt', 'updatedAt']
       });
@@ -279,14 +283,14 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     } finally {
       setIsLoading(false);
     }
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   useEffect(() => {
-    if (params.id) {
+    if (resolvedParams.id) {
       fetchGame();
 
       // Subscribe to match additions
-      const addSubscription = client.subscriptions.onMatchAdded({ gameId: params.id }).subscribe({
+      const addSubscription = client.subscriptions.onMatchAdded({ gameId: resolvedParams.id }).subscribe({
         next: (data) => {
           if (data) {
             setGame(data);
@@ -296,7 +300,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
       });
 
       // Subscribe to match deletions
-      const deleteSubscription = client.subscriptions.onMatchDeleted({ gameId: params.id }).subscribe({
+      const deleteSubscription = client.subscriptions.onMatchDeleted({ gameId: resolvedParams.id }).subscribe({
         next: (data) => {
           if (data) {
             setGame(data);
@@ -311,11 +315,11 @@ export default function GameDetail({ params }: { params: { id: string } }) {
         deleteSubscription.unsubscribe();
       };
     }
-  }, [params.id, fetchGame]);
+  }, [resolvedParams.id, fetchGame]);
 
   const handlePublishGame = async () => {
     try {
-      const result = await updateGameStatus(params.id, 'active');
+      const result = await updateGameStatus(resolvedParams.id, 'active');
       if (!result) {
         throw new Error('Failed to update game status');
       }
@@ -331,7 +335,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
 
   const handleCompleteGame = async () => {
     try {
-      await updateGameStatus(params.id, 'completed');
+      await updateGameStatus(resolvedParams.id, 'completed');
       setAlertMessage({ type: 'success', message: 'Game completed successfully' });
     } catch (error) {
       console.error('Error completing game:', error);
@@ -341,7 +345,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
 
   const handleDeleteGame = async () => {
     try {
-      await updateGameStatus(params.id, 'deleted');
+      await updateGameStatus(resolvedParams.id, 'deleted');
       setAlertMessage({ type: 'success', message: 'Game deleted successfully' });
       router.push('/games');
     } catch (error) {
@@ -383,7 +387,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
       }
 
       const result = await client.mutations.addTeamToGame({
-        gameId: params.id,
+        gameId: resolvedParams.id,
         teamId: selectedTeam.id,
         teamName: selectedTeam.name,
         teamLogo: selectedTeam.logo || '',
@@ -431,7 +435,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
   const handleRemoveTeam = async (teamId: string) => {
     try {
       const result = await client.mutations.removeTeamFromGame({
-        gameId: params.id,
+        gameId: resolvedParams.id,
         teamId: teamId
       });
 
@@ -449,7 +453,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     e.preventDefault();
     try {
       const result = await client.mutations.addMatch({
-        gameId: params.id,
+        gameId: resolvedParams.id,
         ...newMatch,
         date: new Date().toISOString(),
       });
@@ -546,7 +550,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
   const handleDeleteMatch = async (matchIndex: number) => {
     try {
       const result = await client.mutations.deleteMatch({
-        gameId: params.id,
+        gameId: resolvedParams.id,
         matchIndex
       });
 
@@ -585,10 +589,10 @@ export default function GameDetail({ params }: { params: { id: string } }) {
   }, []);
 
   useEffect(() => {
-    if (!currentUser || !params.id) return;
+    if (!currentUser || !resolvedParams.id) return;
 
     // Subscribe to viewer updates
-    const subscription = client.subscriptions.onGameViewersUpdated({ gameId: params.id }).subscribe({
+    const subscription = client.subscriptions.onGameViewersUpdated({ gameId: resolvedParams.id }).subscribe({
       next: (data) => {
         if (data) {
           // Filter out null/undefined values and inactive viewers
@@ -607,10 +611,10 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [currentUser, params.id]);
+  }, [currentUser, resolvedParams.id]);
 
   useEffect(() => {
-    if (!params.id) return;
+    if (!resolvedParams.id) return;
 
     // Add viewer record when component mounts
     const addViewer = async () => {
@@ -621,7 +625,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
         }
 
         const result = await client.mutations.addGameViewer({
-          gameId: params.id,
+          gameId: resolvedParams.id,
         }, {
           authMode: 'userPool',
           headers: {
@@ -659,7 +663,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     const interval = setInterval(addViewer, 30000);
 
     return () => clearInterval(interval);
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   return (
     <RequireAuth>

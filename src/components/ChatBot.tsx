@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Fab, Paper, IconButton, Box, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -13,6 +13,7 @@ import { generateClient } from 'aws-amplify/data';
 import { createAIHooks } from '@aws-amplify/ui-react-ai';
 import { type Schema } from '../../amplify/data/resource';
 import ReactMarkdown from 'react-markdown';
+import type { PaperProps } from '@mui/material';
 
 const client = generateClient<Schema>({ authMode: 'userPool' });
 const { useAIConversation } = createAIHooks(client);
@@ -36,6 +37,7 @@ export default function ChatBot({
 }: ChatBotProps) {
   const [open, setOpen] = useState(refreshKey > 0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   const conversation = useAIConversation('chat', {
     id: chatId,
@@ -68,8 +70,10 @@ export default function ChatBot({
           bounds="parent"
           position={position}
           onDrag={handleDrag}
+          nodeRef={nodeRef as React.RefObject<HTMLElement>}
         >
           <Paper
+            ref={nodeRef}
             elevation={6}
             sx={{
               position: 'fixed',
