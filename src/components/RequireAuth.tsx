@@ -1,6 +1,8 @@
+'use client';
+
 import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthenticator } from '@aws-amplify/ui-react';
+import { useSession } from 'next-auth/react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 interface RequireAuthProps {
@@ -9,22 +11,17 @@ interface RequireAuthProps {
 
 const RequireAuth = ({ children }: RequireAuthProps) => {
   const router = useRouter();
-  const { user, authStatus } = useAuthenticator((context) => [context.user, context.authStatus]);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     // Redirect to home page if not authenticated
-    if (authStatus === 'unauthenticated') {
+    if (status === 'unauthenticated') {
       router.push('/');
     }
-    
-    // Also redirect if authenticated but no user data
-    if (authStatus === 'authenticated' && !user) {
-      router.push('/');
-    }
-  }, [user, router, authStatus]);
+  }, [status, router]);
 
-  // Show loading state while determining auth status
-  if (authStatus === 'configuring') {
+  // Show loading state while checking session
+  if (status === 'loading') {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 2 }}>
         <CircularProgress />
@@ -33,8 +30,8 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
     );
   }
 
-  // Don't render children if not authenticated
-  if (authStatus === 'unauthenticated' || (authStatus === 'authenticated' && !user)) {
+  // Not authenticated - show redirect message
+  if (!session) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 2 }}>
         <CircularProgress />
