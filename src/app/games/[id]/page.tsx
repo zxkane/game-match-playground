@@ -34,7 +34,6 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import UpdateIcon from '@mui/icons-material/Update';
 import PublishIcon from '@mui/icons-material/Publish';
 import DoneIcon from '@mui/icons-material/Done';
-import { fetchAuthSession } from 'aws-amplify/auth';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import Table from '@mui/material/Table';
@@ -44,12 +43,20 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Image from 'next/image';
-import { getCurrentUser } from 'aws-amplify/auth';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import { stringToColor, stringAvatar } from '@/utils/avatar';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import { useSession } from 'next-auth/react';
 
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({
+  authMode: 'lambda',
+  headers: async () => {
+    const session = await fetch('/api/auth/session').then(res => res.json());
+    return {
+      Authorization: `Bearer ${session?.idToken}`
+    };
+  }
+});
 
 type GameStatus = 'active' | 'completed' | 'deleted';
 
@@ -227,20 +234,13 @@ export default function GameDetail({ params }: PageProps) {
   });
   const [currentUser, setCurrentUser] = useState<{ username: string, userId: string } | null>(null);
   const [gameViewers, setGameViewers] = useState<GameViewer[]>([]);
+  const { data: session } = useSession();
 
   const updateGameStatus = async (gameId: string, status: GameStatus) => {
     try {
-      const session = await fetchAuthSession();
-      if (!session.tokens?.idToken) throw new Error('User not signed in');
-
       const result = await client.mutations.updateGameStatus({
         id: gameId,
         newStatus: status
-      }, {
-        authMode: 'userPool',
-        headers: {
-          'Authorization': session.tokens.idToken.toString(),
-        }
       });
 
       if (result.errors) {
@@ -576,17 +576,17 @@ export default function GameDetail({ params }: PageProps) {
   useEffect(() => {
     const initUser = async () => {
       try {
-        const user = await getCurrentUser();
+        if (!session?.user) throw new Error('No user session found');
         setCurrentUser({
-          username: user.username,
-          userId: user.userId
+          username: session.user.email || '',
+          userId: session.user.id
         });
       } catch (error) {
         console.error('Error getting current user:', error);
       }
     };
     initUser();
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     if (!currentUser || !resolvedParams.id) return;
@@ -619,18 +619,8 @@ export default function GameDetail({ params }: PageProps) {
     // Add viewer record when component mounts
     const addViewer = async () => {
       try {
-        const session = await fetchAuthSession();
-        if (!session.tokens?.idToken) {
-          throw new Error('User not authenticated');
-        }
-
         const result = await client.mutations.addGameViewer({
           gameId: resolvedParams.id,
-        }, {
-          authMode: 'userPool',
-          headers: {
-            'Authorization': session.tokens.idToken.toString(),
-          }
         });
 
         if (result.errors) {
