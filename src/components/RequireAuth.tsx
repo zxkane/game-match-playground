@@ -1,6 +1,9 @@
+'use client';
+
 import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthenticator } from '@aws-amplify/ui-react';
+import { useSession } from 'next-auth/react';
+import { Box, CircularProgress } from '@mui/material';
 
 interface RequireAuthProps {
   children: ReactNode;
@@ -8,21 +11,25 @@ interface RequireAuthProps {
 
 const RequireAuth = ({ children }: RequireAuthProps) => {
   const router = useRouter();
-  const { user, authStatus } = useAuthenticator((context) => [context.user, context.authStatus]);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    if (authStatus === 'authenticated' && !user) {
+    if (status === 'unauthenticated') {
       router.push('/');
     }
-  }, [user, router, authStatus]);
+  }, [status, router]);
 
-  // Wait for auth status to be determined
-  if (authStatus === 'configuring' || authStatus === 'unauthenticated') {
-    return null; // Or return a loading spinner
+  // Show loading state while checking session
+  if (status === 'loading') {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
-  // Only check user after auth status is determined
-  if (authStatus === 'authenticated' && !user) {
+  // Not authenticated
+  if (!session) {
     return null;
   }
 
