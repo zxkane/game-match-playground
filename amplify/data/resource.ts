@@ -367,6 +367,7 @@ For example:
         name: 'standings',
         description: `
           Get current standings for a specific league and season. It also includes the home and away performances of the team.
+          The team result includes the details of the team's performance(home/away/total) in the league.
           Use this after finding the league ID to get standings information.
           Use the start year of the season as the season parameter, for example, 2024 for the 2024/2025 season.
         `.trim().replace(/\n\s+/g, ' '),

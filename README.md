@@ -8,6 +8,12 @@ First, install the dependencies:
 npm install
 ```
 
+This project uses [API-Football](https://rapidapi.com/api-sports/api/api-football) to get football data. You need to sign up and get an API key. Store your API key in the `RAPID_API_KEY` as a secret for Amplify.
+
+```bash
+npx ampx sandbox secret set RAPID_API_KEY
+```
+
 Then, deploy the cloud infrastructure on AWS sandbox:
 
 ```bash
