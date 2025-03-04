@@ -1,10 +1,7 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
 .pnp.js
-.yarn/install-state.gz
 
 # testing
 /coverage
@@ -36,7 +33,22 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# CDK
+/cdk-deployment/cdk.out/
+/cdk-deployment/node_modules/
+/cdk-deployment/*.js
+/cdk-deployment/*.d.ts
+/cdk-deployment/bin/*.js
+/cdk-deployment/bin/*.d.ts
+/cdk-deployment/lib/*.js
+/cdk-deployment/lib/*.d.ts
+/cdk-deployment/test/*.js
+/cdk-deployment/test/*.d.ts
+
+# aider
+.aider*
+
 # amplify
-amplify_outputs.json*
 .amplify/
+amplify_outputs.json*
 .aider*

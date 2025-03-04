@@ -83,18 +83,59 @@ const GameInsights: React.FC<GameInsightsProps> = ({ game, standings }) => {
         3. Predictions for upcoming performance
         4. Recommendations for improvement`;
 
-        const { data: summary, errors } = await client.generations
-          .generateInsights({ requirement: prompt });
+        // Generate insights locally instead of using the commented-out backend function
+        const localInsights = `
+# Game Analysis: ${game.name}
 
-        if (errors) {
-          throw new Error(errors.map(e => e.message).join(', '));
-        }
-        
-        if (summary) {
-          // Cache the insights in localStorage
-          localStorage.setItem(`gameInsights-${game.id}-${cacheKey}`, summary.insights);
-          setInsights(summary.insights);
-        }
+## Team Performance Insights
+${game.teams?.map(team => {
+  const standing = standings.find(s => s.teamId === team?.team.id);
+  if (!standing) return '';
+  
+  const winRate = standing.played > 0 ? ((standing.won / standing.played) * 100).toFixed(1) : '0';
+  const goalDiff = standing.goalsFor - standing.goalsAgainst;
+  
+  return `
+### ${team?.team.name}
+- **Performance**: ${standing.won} wins, ${standing.drawn} draws, ${standing.lost} losses (${winRate}% win rate)
+- **Goals**: Scored ${standing.goalsFor}, Conceded ${standing.goalsAgainst} (Diff: ${goalDiff > 0 ? '+' + goalDiff : goalDiff})
+- **Points**: ${standing.points} points from ${standing.played} games
+${standing.played > 0 ? `- **Form**: ${standing.won > standing.lost ? 'Strong' : standing.won === standing.lost ? 'Inconsistent' : 'Struggling'}` : ''}
+`;
+}).join('\n')}
+
+## Recent Match Analysis
+${game.matches?.slice(-5).map(m => {
+  const homeTeam = game.teams?.find(t => t?.team.id === m?.homeTeamId);
+  const awayTeam = game.teams?.find(t => t?.team.id === m?.awayTeamId);
+  const homeScore = m?.homeScore ?? 0;
+  const awayScore = m?.awayScore ?? 0;
+  const result = homeScore > awayScore ? 'home win' : homeScore < awayScore ? 'away win' : 'draw';
+  
+  return `
+### ${homeTeam?.team.name} ${homeScore} - ${awayScore} ${awayTeam?.team.name}
+- **Result**: ${result === 'home win' ? `${homeTeam?.team.name} victory` : result === 'away win' ? `${awayTeam?.team.name} victory` : 'Draw'}
+- **Goal Difference**: ${Math.abs(homeScore - awayScore)} goals
+`;
+}).join('\n')}
+
+## Predictions & Recommendations
+Based on current standings and recent form:
+
+${standings.sort((a, b) => b.points - a.points).slice(0, 3).map((standing, index) => {
+  const team = game.teams?.find(t => t?.team.id === standing.teamId);
+  return `${index + 1}. ${team?.team.name} is ${index === 0 ? 'leading the table' : 'performing well'} with ${standing.points} points.`;
+}).join('\n')}
+
+${standings.sort((a, b) => a.points - b.points).slice(0, 3).map((standing, index) => {
+  const team = game.teams?.find(t => t?.team.id === standing.teamId);
+  return `${index + 1}. ${team?.team.name} needs to improve their ${standing.goalsFor < 5 ? 'attacking efficiency' : 'defensive stability'}.`;
+}).join('\n')}
+`;
+
+        // Cache the insights in localStorage
+        localStorage.setItem(`gameInsights-${game.id}-${cacheKey}`, localInsights);
+        setInsights(localInsights);
       } catch (error) {
         console.error('Error generating insights:', error);
         setError('Failed to generate insights. Please try again later.');

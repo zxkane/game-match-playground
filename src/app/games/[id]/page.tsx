@@ -9,11 +9,13 @@ import {
   Paper,
   CircularProgress,
   Alert,
+  Typography,
 } from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
 import RequireAuth from '../../../components/RequireAuth';
 import BreadcrumbsComponent from '../../../components/BreadcrumbsComponent';
 import { useSession } from 'next-auth/react';
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 // Import components
 import GameHeader from './components/GameHeader';

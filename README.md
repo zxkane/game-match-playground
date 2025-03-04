@@ -1,43 +1,90 @@
-This is an [AWS Amplify](https://aws.amazon.com/amplify/) with [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js with AWS Lambda Web Adapter
 
-## Getting Started
+This project demonstrates how to deploy a Next.js application to AWS Lambda using the AWS Lambda Web Adapter. The application is deployed to AWS API Gateway + Lambda, while using Amplify for backend services.
 
-First, install the dependencies:
+## Prerequisites
+
+- Node.js 20.x
+- AWS CLI configured for cn-north-1 region
+- AWS CDK installed
+- Docker installed
+
+## Project Structure
+
+- `/src`: Next.js application code
+- `/amplify`: Amplify Gen2 backend code
+- `/cdk-deployment`: CDK application for deploying to AWS
+
+## Local Development
+
+To run the application locally:
 
 ```bash
 npm install
-```
-
-This project uses [API-Football](https://rapidapi.com/api-sports/api/api-football) to get football data. You need to sign up and get an API key. Store your API key in the `RAPID_API_KEY` as a secret for Amplify.
-
-```bash
-npx ampx sandbox secret set RAPID_API_KEY
-```
-
-Then, deploy the cloud infrastructure on AWS sandbox:
-
-```bash
-npx ampx sandbox
-```
-
-Then, run the development server:
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Building the Docker Image
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To build the Docker image locally:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker build -t nextjs-lambda .
+```
 
-## Learn More
+To test the Docker image locally:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+docker run -p 3000:3000 nextjs-lambda
+```
 
-- [AWS Amplify Documentation](https://docs.aws.amazon.com/amplify/latest/userguide/what-is-amplify.html) - learn about AWS Amplify features and API.
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. Configure Environment Variables
+
+Update the `.env.production` file with your actual configuration values:
+
+```
+NEXT_PUBLIC_API_URL=https://your-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+OIDC_ISSUER_URL=your-issuer-url
+NEXTAUTH_URL=https://your-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
+NEXTAUTH_SECRET=your-nextauth-secret
+```
+
+### 2. Deploy with CDK
+
+```bash
+cd cdk-deployment
+npm run build
+cdk bootstrap aws://ACCOUNT-NUMBER/cn-north-1
+cdk deploy
+```
+
+After deployment, the CDK will output the API Gateway URL, which you can use to access your application.
+
+### 3. Update Environment Variables
+
+After deployment, update the `.env.production` file with the actual API Gateway URL:
+
+```
+NEXT_PUBLIC_API_URL=https://your-actual-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
+NEXTAUTH_URL=https://your-actual-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
+```
+
+## Architecture
+
+This project uses the following architecture:
+
+- Next.js application packaged in a Docker container
+- AWS Lambda Web Adapter to run the Next.js app in Lambda
+- API Gateway to route HTTP requests to the Lambda function
+- Amplify backend for authentication and data storage
+
+## Key Files
+
+- `next.config.js`: Next.js configuration with standalone output
+- `Dockerfile`: Docker configuration for building the application
+- `run.sh`: Script to run the Next.js application in Lambda
+- `cdk-deployment/`: CDK code for deploying to AWS

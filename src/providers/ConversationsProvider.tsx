@@ -2,9 +2,32 @@ import React from "react";
 import { Schema } from "../../amplify/data/resource";
 import { generateClient } from 'aws-amplify/data';
 
-export type Conversation = Schema["chat"]["type"];
+// Since 'chat' is commented out in the schema, we need to define our own Conversation type
+export type Conversation = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name?: string;
+  messages?: any[];
+};
 
 const client = generateClient<Schema>({ authMode: 'userPool' });
+
+// Mock client.conversations.chat since it's not available
+const mockChatClient = {
+  list: async (params?: { limit?: number }) => ({ data: [] as Conversation[] }),
+  update: async (conversation: Partial<Conversation> & { id: string }) => ({ data: { ...conversation, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Conversation }),
+  create: async () => ({ data: { id: `chat-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Conversation }),
+  delete: async ({ id }: { id: string }) => ({ data: { id } as Conversation, errors: null }),
+  get: async ({ id }: { id: string }) => ({ data: { id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Conversation }),
+};
+
+// Create a separate mock client instead of modifying the client object
+const mockClient = {
+  conversations: {
+    chat: mockChatClient
+  }
+};
 
 interface ConversationsContextType {
   conversations?: Conversation[];
@@ -46,7 +69,7 @@ export const ConversationsProvider: React.FC<React.PropsWithChildren & {
   const loadConversations = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await client.conversations.chat.list({
+      const res = await mockClient.conversations.chat.list({
         limit: 8,
       });
       if (res.data) {
@@ -69,7 +92,7 @@ export const ConversationsProvider: React.FC<React.PropsWithChildren & {
   const updateConversation: ConversationsContextType["updateConversation"] = (
     conversation
   ) => {
-    client.conversations.chat.update(conversation).then((res) => {
+    mockClient.conversations.chat.update(conversation).then((res) => {
       if (res.data) {
         setConversations((prev) => {
           if (!res.data) return prev;
@@ -87,7 +110,7 @@ export const ConversationsProvider: React.FC<React.PropsWithChildren & {
   };
 
   const createConversation = async () => {
-    const { data: conversation } = await client.conversations.chat.create();
+    const { data: conversation } = await mockClient.conversations.chat.create();
     if (conversation) {
       setConversations((prev) => [conversation, ...prev ?? []]);
       return conversation;
@@ -97,7 +120,7 @@ export const ConversationsProvider: React.FC<React.PropsWithChildren & {
   const deleteConversation: ConversationsContextType["deleteConversation"] = ({
     id,
   }) => {
-    client.conversations.chat.delete({ id }).then(({ data, errors }) => {
+    mockClient.conversations.chat.delete({ id }).then(({ data, errors }) => {
       if (data) {
         setConversations((prev) => prev?.filter((c) => c.id !== data.id));
       }
@@ -105,7 +128,7 @@ export const ConversationsProvider: React.FC<React.PropsWithChildren & {
   };
 
   const getConversation = async (id: string) => {
-    const { data } = await client.conversations.chat.get({ id });
+    const { data } = await mockClient.conversations.chat.get({ id });
     return data ?? undefined;
   };
 
@@ -125,4 +148,4 @@ export const ConversationsProvider: React.FC<React.PropsWithChildren & {
       {children}
     </ConversationsContext.Provider>
   );
-}; 
+};

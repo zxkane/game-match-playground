@@ -39,10 +39,16 @@ export default function ChatBot({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
 
-  const conversation = useAIConversation('chat', {
-    id: chatId,
-  });
-  const [{ data: { messages }, isLoading: isLoadingChat }, sendMessage] = conversation;
+  // The 'chat' conversation is commented out in the schema, so we need to mock it
+  // const conversation = useAIConversation('chat', {
+  //   id: chatId,
+  // });
+  // const [{ data: { messages }, isLoading: isLoadingChat }, sendMessage] = conversation;
+  
+  // Mock conversation data
+  const messages: any[] = [];
+  const isLoadingChat = false;
+  const sendMessage = () => {};
   
   const handleOpen = () => {
     setOpen(true);

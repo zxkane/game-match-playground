@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Required for AWS Lambda Web Adapter
   images: {
     remotePatterns: [
       {
@@ -8,7 +9,8 @@ const nextConfig = {
         pathname: '/football/**',
       },
     ],
+    unoptimized: true, // Better for serverless environments
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;
