@@ -10,6 +10,8 @@ import CelebrationIcon from '@mui/icons-material/Celebration';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import CelebrationOutlinedIcon from '@mui/icons-material/CelebrationOutlined';
 import PetsIcon from '@mui/icons-material/Pets';
+import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { DEFAULT_THEME, SITE_TITLE, ThemeKey } from '../constant';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -43,6 +45,15 @@ export const themeConfigurations = {
       blessing: '蛇年大吉，游戏常胜！'
     }
   },
+  spring: {
+    primary: LocalFloristIcon,
+    secondary: AddCircleOutlineIcon,
+    drawer: {
+      icon: '🌱',
+      title: SITE_TITLE,
+      blessing: 'Fresh Starts, New Growth!'
+    }
+  },
 } as const;
 
 // Theme definitions
@@ -72,6 +83,38 @@ const themes = {
             color: { value: '#FFD700' },
             _hover: {
               backgroundColor: { value: '#8B0000' },
+            },
+          },
+        },
+      },
+    },
+    overrides: [defaultDarkModeOverride],
+  }),
+  spring: createTheme({
+    name: 'spring-theme',
+    tokens: {
+      colors: {
+        background: {
+          primary: { value: '#F2F9F1' },    // Very light mint green
+          secondary: { value: '#88C282' },  // Medium spring green
+        },
+        font: {
+          interactive: { value: '#4CAF50' }, // Classic medium green
+          primary: { value: '#2E7D32' },     // Darker green
+          secondary: { value: '#66BB6A' },   // Medium-light green
+          accent: { value: '#81C784' },      // Vibrant light green
+        },
+        border: {
+          primary: { value: '#A5D6A7' },     // Light green border
+        },
+      },
+      components: {
+        button: {
+          primary: {
+            backgroundColor: { value: '#66BB6A' },
+            color: { value: '#FFFFFF' },
+            _hover: {
+              backgroundColor: { value: '#4CAF50' },
             },
           },
         },

@@ -74,7 +74,7 @@ export const CROSS_REGION_INFERENCE = (CUSTOM_MODEL_ID && process.env.CROSS_REGI
 ? process.env.CROSS_REGION_INFERENCE.toLowerCase() === 'true' : false;
 
 // Theme constants
-export const AVAILABLE_THEMES = ['thanksgiving', 'christmas', 'chineseNewYearSnake'] as const;
+export const AVAILABLE_THEMES = ['thanksgiving', 'christmas', 'chineseNewYearSnake', 'spring'] as const;
 export type ThemeKey = typeof AVAILABLE_THEMES[number];
 
-export const DEFAULT_THEME: ThemeKey = 'chineseNewYearSnake';
+export const DEFAULT_THEME: ThemeKey = 'spring';
