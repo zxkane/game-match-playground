@@ -13,16 +13,16 @@ interface GameMetadataProps {
 
 const GameMetadata: React.FC<GameMetadataProps> = ({ game, gameViewers }) => {
   return (
-    <div className="space-y-2 mt-4">
-      <Typography variant="body2" className="flex items-center gap-2">
+    <div className="space-y-4 mt-4">
+      <Typography variant="body1" className="flex items-center gap-2 text-base">
         <AddCircleOutlineIcon fontSize="small" />
         {new Date(game.createdAt).toLocaleString()}
       </Typography>
-      <Typography variant="body2" className="flex items-center gap-2">
+      <Typography variant="body1" className="flex items-center gap-2 text-base">
         <UpdateIcon fontSize="small" />
         {new Date(game.updatedAt).toLocaleString()}
       </Typography>
-      <Typography variant="body2">
+      <Typography variant="body1" className="text-base">
         <strong>Owner:</strong> {game.owner}
       </Typography>
       
@@ -47,7 +47,7 @@ const GameMetadata: React.FC<GameMetadataProps> = ({ game, gameViewers }) => {
             ))}
           </AvatarGroup>
           {gameViewers.length > 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap', display: 'inline' }}>
+            <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'nowrap', display: 'inline' }} className="text-base">
               {gameViewers.length == 1 ? 'is viewing this game.' : 'are viewing this game.'}
             </Typography>
           )}

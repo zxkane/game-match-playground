@@ -37,13 +37,16 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   setAlertMessage,
 }) => {
   return (
-    <div className="p-4">
+    <div className="px-4 pt-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:justify-between">
         <div className="flex-1">
-          <div className="flex items-center space-x-4 sm:justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col space-y-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-col space-y-4">
               <Typography variant="h4" component="h1" className="mr-4 break-words text-wrap" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' } }}>
                 {game.name}
+              </Typography>
+              <Typography variant="body1" className="text-gray-600">
+                {game.description}
               </Typography>
               <Chip
                 icon={
@@ -65,13 +68,16 @@ const GameHeader: React.FC<GameHeaderProps> = ({
                 variant="outlined"
               />
             </div>
-            <div className="hidden sm:flex sm:justify-end">
+            <div className="hidden sm:flex sm:justify-end sm:mt-6">
               <ButtonGroup 
                 variant="contained" 
                 size="small"
                 sx={{ 
+                  marginTop: '1rem',
+                  marginBottom: '1rem',
                   '& .MuiButton-root': {
                     width: '150px',
+                    margin: '0 4px'  // Add horizontal spacing between buttons
                   }
                 }}
               >
@@ -117,63 +123,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
                 )}
               </ButtonGroup>
             </div>
-          </div>
-          <Typography variant="body1" className="text-gray-600 mt-4">
-            {game.description}
-          </Typography>
-          
-          <div className="mt-4 sm:hidden flex justify-center">
-            <ButtonGroup 
-              size="small"
-              sx={{ 
-                width: '100%',
-                '& .MuiButton-root': {
-                  width: '150px',
-                }
-              }}
-            >
-              {game.status === 'draft' && (
-                <Tooltip title={
-                  (!game.teams || Object.keys(game.teams).length < 2) 
-                    ? "At least two teams are required to publish" 
-                    : "Publish Game"
-                }>
-                  <span style={{ width: '100%' }}>
-                    <Button
-                      onClick={onPublishGame}
-                      startIcon={<PublishIcon />}
-                      color="primary"
-                      disabled={!game.teams || Object.keys(game.teams).length < 2}
-                      fullWidth
-                    >
-                      Publish
-                    </Button>
-                  </span>
-                </Tooltip>
-              )}
-              {game.status === 'active' && (
-                <Tooltip title="Complete Game">
-                  <Button
-                    onClick={onCompleteGame}
-                    startIcon={<DoneIcon />}
-                    color="success"
-                  >
-                    Complete
-                  </Button>
-                </Tooltip>
-              )}
-              {game.status != 'deleted' && (
-                <Tooltip title="Delete Game">
-                  <Button
-                    onClick={onDeleteGame}
-                    startIcon={<DeleteIcon />}
-                    color="error"
-                  >
-                    Delete
-                  </Button>
-                </Tooltip>
-              )}
-            </ButtonGroup>
           </div>
         </div>
       </div>

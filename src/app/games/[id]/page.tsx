@@ -714,7 +714,7 @@ export default function GameDetail({ params }: PageProps) {
                     />
                     
                     {/* Game Metadata */}
-                    <Paper className="p-4">
+                    <Paper className="p-4 py-8">
                       <GameMetadata 
                         game={game}
                         gameViewers={gameViewers}
