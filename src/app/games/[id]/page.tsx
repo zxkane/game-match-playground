@@ -6,48 +6,15 @@ import { generateClient } from 'aws-amplify/api';
 import { Schema } from '../../../../amplify/data/resource';
 import DashboardLayout from '../../../components/DashboardLayout';
 import {
-  Typography,
   Paper,
-  Button,
   CircularProgress,
   Alert,
-  Chip,
-  Tooltip,
-  ButtonGroup,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Avatar,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  AvatarGroup,
 } from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
 import RequireAuth from '../../../components/RequireAuth';
 import BreadcrumbsComponent from '../../../components/BreadcrumbsComponent';
-import DraftsIcon from '@mui/icons-material/Drafts';
-import PendingIcon from '@mui/icons-material/Pending';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import UpdateIcon from '@mui/icons-material/Update';
-import PublishIcon from '@mui/icons-material/Publish';
-import DoneIcon from '@mui/icons-material/Done';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import Image from 'next/image';
 import { getCurrentUser } from 'aws-amplify/auth';
-import { stringToColor, stringAvatar } from '@/utils/avatar';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 // Import components
 import GameHeader from './components/GameHeader';
@@ -427,9 +394,36 @@ export default function GameDetail({ params }: PageProps) {
 
   const handleDeleteMatch = async (matchIndex: number) => {
     try {
+      if (!game || !game.matches) {
+        throw new Error('Game or matches not available');
+      }
+
+      // Get valid matches and sort them like in the UI (newest first)
+      const validMatches = game.matches
+        .filter((match): match is Schema['Match']['type'] => match !== null && match !== undefined)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      if (matchIndex >= validMatches.length) {
+        throw new Error('Invalid match index');
+      }
+
+      // Get the match we want to delete by its sorted index
+      const matchToDelete = validMatches[matchIndex];
+      
+      // Find its actual index in the original array
+      const actualIndex = game.matches.findIndex(
+        m => m && m.homeTeamId === matchToDelete.homeTeamId && 
+        m.awayTeamId === matchToDelete.awayTeamId && 
+        m.date === matchToDelete.date
+      );
+
+      if (actualIndex === -1) {
+        throw new Error('Match not found in original array');
+      }
+      
       const result = await client.mutations.deleteMatch({
         gameId: resolvedParams.id,
-        matchIndex
+        matchIndex: actualIndex
       });
 
       if (result.errors) {
