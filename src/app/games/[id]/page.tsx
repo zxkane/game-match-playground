@@ -158,7 +158,7 @@ const GameInsights: React.FC<GameInsightsProps> = ({ game, standings }) => {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <Typography variant="h4" className="text-gray-800">
+            <Typography variant="h4" className="text-gray-800 break-words text-wrap" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' } }}>
               🎭 Football Comedy Hour - Match Stories with a Twist
             </Typography>
             <Typography 
@@ -669,7 +669,7 @@ export default function GameDetail({ params }: PageProps) {
     <RequireAuth>
       <UserProvider>
         <DashboardLayout>
-          <main className="min-h-screen p-2 sm:p-8">
+          <main className="min-h-screen p-2 sm:p-8 w-full overflow-x-hidden box-border">
             <div className="space-y-4">
               {isLoading ? (
                 <div className="flex justify-center p-4">
@@ -701,7 +701,7 @@ export default function GameDetail({ params }: PageProps) {
                         <div className="flex-1">
                           <div className="flex items-center space-x-4 sm:justify-between">
                             <div className="flex items-center space-x-4">
-                              <Typography variant="h4" component="h1" className="mr-4">
+                              <Typography variant="h4" component="h1" className="mr-4 break-words text-wrap" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' } }}>
                                 {game.name}
                               </Typography>
                               <Chip
@@ -897,7 +897,7 @@ export default function GameDetail({ params }: PageProps) {
                             )}
                           </div>
                           {game.teams && Object.keys(game.teams).length > 0 ? (
-                            <div className="grid grid-cols-4 gap-1 sm:gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 sm:gap-4">
                               {Object.values(game.teams).map((teamPlayer) => 
                                 teamPlayer && teamPlayer.team && (
                                   <Paper 
@@ -995,8 +995,8 @@ export default function GameDetail({ params }: PageProps) {
                               Standings
                             </Typography>
                             {game.teams && game.teams.length > 0 ? (
-                              <TableContainer>
-                                <Table size="small">
+              <TableContainer className="overflow-x-auto">
+                <Table size="small" className="w-full">
                                   <TableHead>
                                     <TableRow>
                                       <TableCell className="px-2">Team</TableCell>
@@ -1105,8 +1105,8 @@ export default function GameDetail({ params }: PageProps) {
                           </div>
 
                           {game.matches && game.matches.length > 0 ? (
-                            <TableContainer>
-                              <Table>
+                            <TableContainer className="overflow-x-auto">
+                              <Table className="w-full">
                                 <TableHead>
                                   <TableRow>
                                     <TableCell>Date</TableCell>
@@ -1132,7 +1132,7 @@ export default function GameDetail({ params }: PageProps) {
                                           </TableCell>
                                           <TableCell align="right">
                                             <div className="flex items-center justify-end gap-2">
-                                              <span>{homeTeam.team.name}</span>
+                                              <span className="break-words text-wrap max-w-[100px] sm:max-w-none">{homeTeam.team.name}</span>
                                               <Avatar
                                                 src={homeTeam.team.logo || ''}
                                                 alt={homeTeam.team.name}
@@ -1152,7 +1152,7 @@ export default function GameDetail({ params }: PageProps) {
                                                 sx={{ width: 24, height: 24 }}
                                                 variant="rounded"
                                               />
-                                              <span>{awayTeam.team.name}</span>
+                                              <span className="break-words text-wrap max-w-[100px] sm:max-w-none">{awayTeam.team.name}</span>
                                             </div>
                                           </TableCell>
                                           {game.status === 'active' && (
@@ -1208,6 +1208,8 @@ export default function GameDetail({ params }: PageProps) {
       <Dialog 
         open={openAddMatchDialog} 
         onClose={() => setOpenAddMatchDialog(false)}
+        fullWidth
+        maxWidth="sm"
       >
         <DialogTitle>Add New Match</DialogTitle>
         <DialogContent>
@@ -1242,7 +1244,7 @@ export default function GameDetail({ params }: PageProps) {
                       sx={{ width: 24, height: 24 }}
                       variant="rounded"
                     />
-                    <span>{teamPlayer?.team.name}</span>
+                    <span className="break-words text-wrap">{teamPlayer?.team.name}</span>
                   </div>
                 </MenuItem>
               ))}
@@ -1269,7 +1271,7 @@ export default function GameDetail({ params }: PageProps) {
                       sx={{ width: 24, height: 24 }}
                       variant="rounded"
                     />
-                    <span>{teamPlayer?.team.name}</span>
+                    <span className="break-words text-wrap">{teamPlayer?.team.name}</span>
                   </div>
                 </MenuItem>
               ))}
@@ -1307,6 +1309,8 @@ export default function GameDetail({ params }: PageProps) {
       <Dialog 
         open={openAddTeamDialog} 
         onClose={() => setOpenAddTeamDialog(false)}
+        fullWidth
+        maxWidth="sm"
       >
         <DialogTitle>Add New Team</DialogTitle>
         <DialogContent>
@@ -1339,9 +1343,10 @@ export default function GameDetail({ params }: PageProps) {
                 required
                 sx={{ 
                   mb: 2,
-                  minWidth: '400px',
+                  width: '100%',
+                  maxWidth: '400px',
                   '& .MuiSelect-select': {
-                    width: '400px'
+                    width: '100%'
                   }
                 }}
                 slotProps={{
@@ -1376,7 +1381,7 @@ export default function GameDetail({ params }: PageProps) {
                           style={{ objectFit: 'contain', flexShrink: 0 }}
                         />
                       )}
-                      <span style={{ whiteSpace: 'nowrap' }}>{league.country?.name} - </span>
+                      <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{league.country?.name} - </span>
                       {league.league?.logo && (
                         <Image
                           src={league.league.logo}
@@ -1387,7 +1392,7 @@ export default function GameDetail({ params }: PageProps) {
                           style={{ objectFit: 'contain', flexShrink: 0 }}
                         />
                       )}
-                      <span style={{ whiteSpace: 'nowrap' }}>{league.league?.name}</span>
+                      <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{league.league?.name}</span>
                     </div>
                   </MenuItem>
                 ))}
@@ -1433,7 +1438,7 @@ export default function GameDetail({ params }: PageProps) {
                               style={{ objectFit: 'contain', flexShrink: 0 }}
                             />
                           )}
-                          <span style={{ whiteSpace: 'nowrap' }}>
+                          <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                             {team.name}
                           </span>
                         </div>

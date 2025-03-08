@@ -270,7 +270,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <MUIThemeProvider theme={muiTheme}>
-      <Box sx={{ display: 'flex' }}>
+      <Box sx={{ display: 'flex', overflowX: 'hidden' }}>
         <StyledAppBar position="fixed" open={open}>
           <Toolbar 
             sx={{ 
@@ -298,7 +298,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 component="div"
                 className="header-text"
                 sx={{ 
-                  display: { xs: 'none', sm: 'block' },
+                  display: { xs: 'none', md: 'block' },
                   fontWeight: 'bold',
                   color: 'var(--amplify-colors-font-secondary) !important'
                 }}
@@ -312,7 +312,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <Typography 
                     variant="body2" 
                     className="header-email"
-                    sx={{ display: { xs: 'none', sm: 'block' } }}
+                    sx={{ 
+                      display: { xs: 'none', md: 'block' },
+                      maxWidth: { md: '150px', lg: '250px' },
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
                   >
                     {userEmail}
                   </Typography>
@@ -426,12 +432,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               marginLeft: 0,
             }),
             backgroundColor: 'var(--amplify-colors-background-secondary)',
-            marginTop: { xs: '48px', sm: '64px' }
+            marginTop: { xs: '48px', sm: '64px' },
+            overflowX: 'hidden'
           }}
         >
-          <Paper elevation={3}>
+        <Paper elevation={3} sx={{ maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box', width: '100%' }}>
             {children}
-          </Paper>
+        </Paper>
         </Box>
         <ConversationsProvider autoLoad={true}>
           <ChatBotContainer email={userEmail} />
