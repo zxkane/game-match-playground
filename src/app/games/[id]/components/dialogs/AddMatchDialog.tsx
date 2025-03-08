@@ -10,6 +10,7 @@ import {
   MenuItem,
   Alert,
   Avatar,
+  Box,
 } from '@mui/material';
 import { Schema } from '../../../../../../amplify/data/resource';
 
@@ -53,8 +54,8 @@ const AddMatchDialog: React.FC<AddMatchDialogProps> = ({
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle>Add New Match</DialogTitle>
-      <DialogContent>
+      <DialogTitle sx={{ pb: 2 }}>Add New Match</DialogTitle>
+      <DialogContent sx={{ pt: 3 }}>
         {alertMessage && (
           <Alert 
             severity={alertMessage.type} 
@@ -64,82 +65,86 @@ const AddMatchDialog: React.FC<AddMatchDialogProps> = ({
             {alertMessage.message}
           </Alert>
         )}
-        <form onSubmit={onAddMatch} className="space-y-4 pt-2">
-          <TextField
-            select
-            fullWidth
-            label="Home Team"
-            value={newMatch.homeTeamId}
-            onChange={(e) => setNewMatch({...newMatch, homeTeamId: e.target.value})}
-            required
-          >
-            {game?.teams?.filter(team => team !== null).map((teamPlayer) => (
-              <MenuItem 
-                key={teamPlayer?.team.id} 
-                value={teamPlayer?.team.id}
-                disabled={teamPlayer?.team.id === newMatch.awayTeamId}
-              >
-                <div className="flex items-center gap-2">
-                  <Avatar
-                    src={teamPlayer?.team.logo || ''}
-                    alt={teamPlayer?.team.name}
-                    sx={{ width: 24, height: 24 }}
-                    variant="rounded"
-                  />
-                  <span className="break-words text-wrap">{teamPlayer?.team.name}</span>
-                </div>
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            select
-            fullWidth
-            label="Away Team"
-            value={newMatch.awayTeamId}
-            onChange={(e) => setNewMatch({...newMatch, awayTeamId: e.target.value})}
-            required
-          >
-            {game?.teams?.filter(team => team !== null).map((teamPlayer) => (
-              <MenuItem 
-                key={teamPlayer?.team.id} 
-                value={teamPlayer?.team.id}
-                disabled={teamPlayer?.team.id === newMatch.homeTeamId}
-              >
-                <div className="flex items-center gap-2">
-                  <Avatar
-                    src={teamPlayer?.team.logo || ''}
-                    alt={teamPlayer?.team.name}
-                    sx={{ width: 24, height: 24 }}
-                    variant="rounded"
-                  />
-                  <span className="break-words text-wrap">{teamPlayer?.team.name}</span>
-                </div>
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <div className="flex gap-4">
+        <form onSubmit={onAddMatch}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
             <TextField
-              type="number"
-              label="Home Score"
-              value={newMatch.homeScore}
-              onChange={(e) => setNewMatch({...newMatch, homeScore: parseInt(e.target.value) || 0})}
+              select
+              fullWidth
+              label="Home Team"
+              value={newMatch.homeTeamId}
+              onChange={(e) => setNewMatch({...newMatch, homeTeamId: e.target.value})}
               required
-              inputProps={{ min: 0 }}
-            />
+            >
+              {game?.teams?.filter(team => team !== null).map((teamPlayer) => (
+                <MenuItem 
+                  key={teamPlayer?.team.id} 
+                  value={teamPlayer?.team.id}
+                  disabled={teamPlayer?.team.id === newMatch.awayTeamId}
+                >
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      src={teamPlayer?.team.logo || ''}
+                      alt={teamPlayer?.team.name}
+                      sx={{ width: 24, height: 24 }}
+                      variant="rounded"
+                    />
+                    <span className="break-words text-wrap">{teamPlayer?.team.name}</span>
+                  </div>
+                </MenuItem>
+              ))}
+            </TextField>
+
             <TextField
-              type="number"
-              label="Away Score"
-              value={newMatch.awayScore}
-              onChange={(e) => setNewMatch({...newMatch, awayScore: parseInt(e.target.value) || 0})}
+              select
+              fullWidth
+              label="Away Team"
+              value={newMatch.awayTeamId}
+              onChange={(e) => setNewMatch({...newMatch, awayTeamId: e.target.value})}
               required
-              inputProps={{ min: 0 }}
-            />
-          </div>
+            >
+              {game?.teams?.filter(team => team !== null).map((teamPlayer) => (
+                <MenuItem 
+                  key={teamPlayer?.team.id} 
+                  value={teamPlayer?.team.id}
+                  disabled={teamPlayer?.team.id === newMatch.homeTeamId}
+                >
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      src={teamPlayer?.team.logo || ''}
+                      alt={teamPlayer?.team.name}
+                      sx={{ width: 24, height: 24 }}
+                      variant="rounded"
+                    />
+                    <span className="break-words text-wrap">{teamPlayer?.team.name}</span>
+                  </div>
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <div className="flex gap-8">
+              <TextField
+                type="number"
+                label="Home Score"
+                value={newMatch.homeScore}
+                onChange={(e) => setNewMatch({...newMatch, homeScore: parseInt(e.target.value) || 0})}
+                required
+                inputProps={{ min: 0 }}
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                type="number"
+                label="Away Score"
+                value={newMatch.awayScore}
+                onChange={(e) => setNewMatch({...newMatch, awayScore: parseInt(e.target.value) || 0})}
+                required
+                inputProps={{ min: 0 }}
+                sx={{ flex: 1 }}
+              />
+            </div>
+          </Box>
         </form>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ p: 3, pt: 2 }}>
         <Button onClick={onClose}>Cancel</Button>
         <Button onClick={onAddMatch} variant="contained">
           Add Match

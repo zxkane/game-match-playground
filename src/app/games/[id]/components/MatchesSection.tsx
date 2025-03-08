@@ -21,16 +21,18 @@ const MatchesSection: React.FC<MatchesSectionProps> = ({
   return (
     <Paper className="p-4">
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Typography variant="h4" className="text-gray-800">
+        <div className="flex justify-between items-center mb-4">
+          <Typography variant="h4" className="text-gray-800 font-bold">
             Matches
           </Typography>
           {game.status === 'active' && (
             <Button
               variant="contained"
-              color="primary"
+              color="success"
               onClick={onAddMatchClick}
               startIcon={<AddIcon />}
+              size="medium"
+              sx={{ textTransform: 'uppercase', fontWeight: 'bold' }}
             >
               Add Match
             </Button>
