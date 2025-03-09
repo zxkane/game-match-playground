@@ -1,6 +1,6 @@
 'use client';
 
-import { Typography, Button, Paper, Avatar, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Stack } from '@mui/material';
+import { Typography, Button, Paper, Avatar, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Stack, Box } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Schema } from '../../../../../amplify/data/resource';
@@ -20,23 +20,39 @@ const MatchesSection: React.FC<MatchesSectionProps> = ({
 }) => {
   return (
     <Paper className="p-4">
-      <div className="space-y-4">
-        <div className="flex justify-between items-center mb-4">
-          <Typography variant="h4" className="text-gray-800 font-bold">
-            Matches
-          </Typography>
-          {game.status === 'active' && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={onAddMatchClick}
-              startIcon={<AddIcon />}
-              size="medium"
-              sx={{ textTransform: 'uppercase', fontWeight: 'bold' }}
+      <div>
+        <div className="flex justify-between items-center">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              minHeight: 48
+            }}
+          >
+            <Typography
+              variant="h4"
+              className="text-gray-800 font-bold"
             >
-              Add Match
-            </Button>
-          )}
+              Matches
+            </Typography>
+            {game.status === 'active' && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={onAddMatchClick}
+                startIcon={<AddIcon />}
+                size="medium"
+                sx={{
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold'
+                }}
+              >
+                Add Match
+              </Button>
+            )}
+          </Box>
         </div>
 
         {game.matches && game.matches.length > 0 ? (
