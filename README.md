@@ -1,6 +1,66 @@
-# Next.js with AWS Lambda Web Adapter
+# Next.js with AWS Lambda Web Adapter - AWS China Region Migration
 
-This project demonstrates how to deploy a Next.js application to AWS Lambda using the AWS Lambda Web Adapter. The application is deployed to AWS API Gateway + Lambda, while using Amplify for backend services.
+This branch demonstrates how to deploy a Next.js application to AWS Lambda in China regions using the AWS Lambda Web Adapter. The application is deployed to AWS API Gateway + Lambda, while using Amplify for backend services with specific adaptations for AWS China regions.
+
+## China Region Adaptations & Migration Features
+
+This branch contains specific modifications to support deployment in AWS China regions:
+
+1. **External Authentication**: Amplify Gen2 no longer manages authentication as AWS China doesn't provide Cognito User Pool. Instead, an external OIDC provider is used for authentication.
+
+2. **AppSync Authentication**: The external OIDC provider is used to authenticate with AppSync services.
+
+3. **Disabled Amplify UI Features**: Amplify UI features that are tightly coupled with Amazon Bedrock (which is not available in China regions) have been disabled.
+
+4. **CDK-Based Deployment**: Implements a custom CDK project (`cdk-deployment`) to deploy the Next.js application to Lambda using the AWS Lambda Web Adapter, replacing Amplify Hosting which has limitations in China regions.
+
+5. **Alternative CI/CD Options**: 
+   - **AWS CodeBuild**: The deployment process can be migrated to AWS CodeBuild pipelines
+   - **GitHub Actions**: Workflows can be set up to automate the CDK deployment process
+   
+   Both options serve as alternatives to the Amplify CI/CD pipeline that's used in the main branch.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    User([User]) --> APIGateway[AWS API Gateway]
+    APIGateway --> Lambda[AWS Lambda with\nLambda Web Adapter]
+    Lambda --> NextJS[Next.js Application]
+    
+    subgraph "Frontend"
+        NextJS
+        NextJS --> NextAuth[NextAuth.js]
+        NextAuth --> ExternalOIDC[External OIDC Provider]
+    end
+    
+    subgraph "Backend (Amplify Gen2)"
+        NextJS --> AppSync[AWS AppSync]
+        AppSync --> DynamoDB[(DynamoDB)]
+        
+        ExternalOIDC -.-> |Authentication| AppSync
+        
+        subgraph "AppSync JS Resolvers"
+            AppSync --> GameHandlers[Game Handlers]
+            AppSync --> LeagueHandlers[League Handlers]
+        end
+    end
+    
+    subgraph "Deployment"
+        CDK[AWS CDK] --> DeployLambda[Deploy Lambda]
+        CDK --> DeployAPI[Deploy API Gateway]
+        CDK --> DeployAmplify[Deploy Amplify Resources]
+    end
+    
+    subgraph "CI/CD Options"
+        GitHub[(GitHub)] --> |Option 1| GitHubActions[GitHub Actions]
+        GitHub --> |Option 2| CodeBuild[AWS CodeBuild]
+        
+        GitHubActions --> CDK
+        CodeBuild --> CDK
+    end
+```
+
 
 ## Prerequisites
 
@@ -17,74 +77,63 @@ This project demonstrates how to deploy a Next.js application to AWS Lambda usin
 
 ## Local Development
 
-To run the application locally:
+### 1. Configure Environment Variables
+
+Update the `.env.production` file with your actual configuration values:
+
+```
+AWS_REGION=cn-north-1
+AWS_PROFILE=your-aws-profile-to-access-cn-north-1
+
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+OIDC_ISSUER_URL=your-issuer-url
+
+NEXTAUTH_URL=http:/localhost:3000
+NEXTAUTH_SECRET=your-nextauth-secret
+```
+
+### 2. Deploy the AWS infrastructure managed by Amplify Gen2
+
+```bash
+npm install
+npx ampx sandbox
+```
+
+### 3. Run the frontend application locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Building the Docker Image
-
-To build the Docker image locally:
-
-```bash
-docker build -t nextjs-lambda .
-```
-
-To test the Docker image locally:
-
-```bash
-docker run -p 3000:3000 nextjs-lambda
-```
-
 ## Deployment
 
-### 1. Configure Environment Variables
+### 1. Follow the local development steps 1 and 2
 
-Update the `.env.production` file with your actual configuration values:
-
-```
-NEXT_PUBLIC_API_URL=https://your-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
-OIDC_CLIENT_ID=your-client-id
-OIDC_CLIENT_SECRET=your-client-secret
-OIDC_ISSUER_URL=your-issuer-url
-NEXTAUTH_URL=https://your-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
-NEXTAUTH_SECRET=your-nextauth-secret
-```
-
-### 2. Deploy with CDK
+### 2. Deploy the frontend application with CDK
 
 ```bash
-cd cdk-deployment
-npm run build
-cdk bootstrap aws://ACCOUNT-NUMBER/cn-north-1
-cdk deploy
+bash ./deploy.sh
 ```
 
 After deployment, the CDK will output the API Gateway URL, which you can use to access your application.
 
 ### 3. Update Environment Variables
 
-After deployment, update the `.env.production` file with the actual API Gateway URL:
+After deployment, update the below environment variable with the actual API Gateway URL:
 
 ```
-NEXT_PUBLIC_API_URL=https://your-actual-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
-NEXTAUTH_URL=https://your-actual-api-gateway-url.execute-api.cn-north-1.amazonaws.com.cn/prod
+NEXTAUTH_URL=https://<api id>.execute-api.cn-north-1.amazonaws.com.cn/
+```
+### 4. Re-deploy the frontend application with CDK
+
+```bash
+bash ./deploy.sh
 ```
 
-## Architecture
+### 5. Add the portal URL to the OIDC client redirect URIs
 
-This project uses the following architecture:
+### 6. Access the application
 
-- Next.js application packaged in a Docker container
-- AWS Lambda Web Adapter to run the Next.js app in Lambda
-- API Gateway to route HTTP requests to the Lambda function
-- Amplify backend for authentication and data storage
-
-## Key Files
-
-- `next.config.js`: Next.js configuration with standalone output
-- `Dockerfile`: Docker configuration for building the application
-- `run.sh`: Script to run the Next.js application in Lambda
-- `cdk-deployment/`: CDK code for deploying to AWS
+Access the application using the API Gateway URL.
