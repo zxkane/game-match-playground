@@ -666,6 +666,7 @@ export default function GameDetail({ params }: PageProps) {
         isLoadingLeagueDetails={isLoadingLeagueDetails}
         alertMessage={alertMessage}
         setAlertMessage={setAlertMessage}
+        fetchLeagueDetails={fetchLeagueDetails}
       />
     </RequireAuth>
   );
