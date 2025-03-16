@@ -1,17 +1,9 @@
-import { 
-  LLM_MODEL, 
-  LLM_SYSTEM_PROMPT, 
-  FOOTBALL_SYSTEM_PROMPT, 
-  CUSTOM_MODEL_ID, 
-  CROSS_REGION_INFERENCE 
-} from '../constants';
 import { a, defineData, type ClientSchema, defineFunction, secret } from '@aws-amplify/backend';
-import { getCrossRegionModelId, getCurrentRegion } from '../utils';
 
 export const leaguesHandler = defineFunction({
   entry: './league-handler/leagues.ts',
   runtime: 20,
-})
+});
 
 export const leagueHandler = defineFunction({
   entry: './league-handler/league.ts',
@@ -20,7 +12,7 @@ export const leagueHandler = defineFunction({
   environment: {
     RAPID_API_KEY: secret('RAPID_API_KEY'),
   }
-})
+});
 
 export const standingsHandler = defineFunction({
   entry: './league-handler/standings.ts',
@@ -29,7 +21,9 @@ export const standingsHandler = defineFunction({
   environment: {
     RAPID_API_KEY: secret('RAPID_API_KEY'),
   }
-})
+});
+
+const provider = 'oidc';
 
 const schema = a.schema({
   GameStatus: a.enum(['draft', 'active', 'completed', 'deleted']),
@@ -59,8 +53,9 @@ const schema = a.schema({
     index('owner').sortKeys(['updatedAt']).queryField('listByOwner')
   ])
   .authorization(allow => [
-    allow.authenticated().to(['read']),
-    allow.ownerDefinedIn('owner'),
+    allow.authenticated(provider).to(['read']),
+    // allow.ownerDefinedIn('owner'),
+    allow.owner('oidc').identityClaim('sub'),
   ]),
   
   customCreateGame: a.mutation()
@@ -69,7 +64,7 @@ const schema = a.schema({
       description: a.string(),
     })
     .returns(a.ref('Game'))
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler(a.handler.custom({
       dataSource: a.ref('Game'),
       entry: './create-game-handler.js'
@@ -82,7 +77,7 @@ const schema = a.schema({
     })
     .returns(a.ref('Game'))
     .authorization(allow => [
-      allow.authenticated(),
+      allow.authenticated(provider),
     ])
     .handler([
       a.handler.custom({
@@ -105,7 +100,7 @@ const schema = a.schema({
     })
     .returns(a.ref('Game'))
     .authorization(allow => [
-      allow.authenticated(),
+      allow.authenticated(provider),
     ])
     .handler([
       a.handler.custom({
@@ -125,7 +120,7 @@ const schema = a.schema({
     })
     .returns(a.ref('Game'))
     .authorization(allow => [
-      allow.authenticated(),
+      allow.authenticated(provider),
     ])
     .handler([
       a.handler.custom({
@@ -157,7 +152,7 @@ const schema = a.schema({
       countryCode: a.string(),
     })
     .returns(a.ref('LeagueCountry').array())
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler(a.handler.function(leaguesHandler)),
 
   Team: a.customType({
@@ -191,7 +186,7 @@ const schema = a.schema({
       id: a.string().required(),
     })
     .returns(a.ref('League'))
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler(a.handler.function(leagueHandler)),
 
   Goal: a.customType({
@@ -220,7 +215,7 @@ const schema = a.schema({
     })
     .returns(a.ref('Game'))
     .authorization(allow => [
-      allow.authenticated(),
+      allow.authenticated(provider),
     ])
     .handler([
       a.handler.custom({
@@ -240,7 +235,7 @@ const schema = a.schema({
     })
     .returns(a.ref('Game'))
     .authorization(allow => [
-      allow.authenticated(),
+      allow.authenticated(provider),
     ])
     .handler([
       a.handler.custom({
@@ -259,7 +254,7 @@ const schema = a.schema({
     .arguments({
       gameId: a.string().required()
     })
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler(a.handler.custom({
       entry: './match-subscription-handler.js'
     })),
@@ -269,7 +264,7 @@ const schema = a.schema({
     .arguments({
       gameId: a.string().required()
     })
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler(a.handler.custom({
       entry: './match-subscription-handler.js'
     })),
@@ -284,14 +279,14 @@ const schema = a.schema({
     index('gameId').sortKeys(['lastSeen']).queryField('listByLastSeen').name('listByGameIdOrderByLastSeen')
   ])
   .disableOperations(['create', 'update', 'delete'])
-  .authorization(allow => allow.authenticated()),
+  .authorization(allow => allow.authenticated(provider)),
 
   addGameViewer: a.mutation()
     .arguments({
       gameId: a.string().required(),
     })
     .returns(a.ref('GameViewer').array())
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler([
       a.handler.custom({
         entry: './add-game-viewer-handler.js',
@@ -308,67 +303,67 @@ const schema = a.schema({
     .arguments({
       gameId: a.string().required()
     })
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler(
       a.handler.custom({
         entry: './game-viewers-subscription-handler.js',
       }),
     ),
 
-  generateInsights: a.generation({
-    aiModel: CROSS_REGION_INFERENCE ? {
-      resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
-     } : a.ai.model(LLM_MODEL),
-    systemPrompt: LLM_SYSTEM_PROMPT,
-    inferenceConfiguration: {
-      maxTokens: 1000,
-      temperature: 0.65,
-    },
-  })
-  .arguments({
-    requirement: a.string().required(),
-    })
-    .returns(a.customType({
-      insights: a.string().required(),
-    }))
-    .authorization(allow => [allow.authenticated()]),
+  // generateInsights: a.generation({
+  //   aiModel: CROSS_REGION_INFERENCE ? {
+  //     resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
+  //    } : a.ai.model(LLM_MODEL),
+  //   systemPrompt: LLM_SYSTEM_PROMPT,
+  //   inferenceConfiguration: {
+  //     maxTokens: 1000,
+  //     temperature: 0.65,
+  //   },
+  // })
+  // .arguments({
+  //   requirement: a.string().required(),
+  //   })
+  //   .returns(a.customType({
+  //     insights: a.string().required(),
+  //   }))
+  //   .authorization(allow => [allow.authenticated(provider)]),
 
-  chat: a.conversation({
-    aiModel: CROSS_REGION_INFERENCE ? {
-      resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
-     } : a.ai.model(LLM_MODEL),
-    systemPrompt: `${FOOTBALL_SYSTEM_PROMPT}
+//   chat: a.conversation({
+//     aiModel: CROSS_REGION_INFERENCE ? {
+//       resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
+//      } : a.ai.model(LLM_MODEL),
+//     systemPrompt: `${FOOTBALL_SYSTEM_PROMPT}
 
-When asked about current standings or this season's standings, first determine the correct season below rules, then use that season parameter with the standings query.
-For example:
-1. Use current date to determine the season. 
-  - For most european leagues, the season starts in August and ends in May.
-    1. If the current date is between August and May, use the current year as the season number.
-    2. If the current date is before August or after May, use the previous year as the season number.
-  - For the leagues in Asia, the season starts in July and ends in June. For example, China Super League.
-2. Use that season number in the standings query`,
-    tools: [
-      a.ai.dataTool({
-        name: 'leagues',
-        description: `
-          Get a list of available leagues and their IDs.
-          Use this first to find the league ID when user mentions a league by name.
-          You can filter by countryCode.
-        `.trim().replace(/\n\s+/g, ' '),
-        query: a.ref('leagues'),
-      }),
-      a.ai.dataTool({
-        name: 'standings',
-        description: `
-          Get current standings for a specific league and season. It also includes the home and away performances of the team.
-          The team result includes the details of the team's performance(home/away/total) in the league.
-          Use this after finding the league ID to get standings information.
-          Use the start year of the season as the season parameter, for example, 2024 for the 2024/2025 season.
-        `.trim().replace(/\n\s+/g, ' '),
-        query: a.ref('standings'),
-      }),
-    ],
-  }).authorization(allow => allow.owner()),
+// When asked about current standings or this season's standings, first determine the correct season below rules, then use that season parameter with the standings query.
+// For example:
+// 1. Use current date to determine the season. 
+//   - For most european leagues, the season starts in August and ends in May.
+//     1. If the current date is between August and May, use the current year as the season number.
+//     2. If the current date is before August or after May, use the previous year as the season number.
+//   - For the leagues in Asia, the season starts in July and ends in June. For example, China Super League.
+// 2. Use that season number in the standings query`,
+//     tools: [
+//       a.ai.dataTool({
+//         name: 'leagues',
+//         description: `
+//           Get a list of available leagues and their IDs.
+//           Use this first to find the league ID when user mentions a league by name.
+//           You can filter by countryCode.
+//         `.trim().replace(/\n\s+/g, ' '),
+//         query: a.ref('leagues'),
+//       }),
+//       a.ai.dataTool({
+//         name: 'standings',
+//         description: `
+//           Get current standings for a specific league and season. It also includes the home and away performances of the team.
+//           The team result includes the details of the team's performance(home/away/total) in the league.
+//           Use this after finding the league ID to get standings information.
+//           Use the start year of the season as the season parameter, for example, 2024 for the 2024/2025 season.
+//         `.trim().replace(/\n\s+/g, ' '),
+//         query: a.ref('standings'),
+//       }),
+//     ],
+//   }).authorization(allow => allow.owner()),
 
   LeagueStanding: a.customType({
     rank: a.integer().required(),
@@ -422,7 +417,7 @@ For example:
       season: a.integer().required(),
     })
     .returns(a.ref('LeagueStanding').array())
-    .authorization(allow => [allow.authenticated()])
+    .authorization(allow => [allow.authenticated(provider)])
     .handler(a.handler.function(standingsHandler)),
 });
 
@@ -431,6 +426,13 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'userPool'
+    defaultAuthorizationMode: 'oidc',
+    oidcAuthorizationMode: {
+      oidcProviderName: process.env.OIDC_ISSUER_URL!,
+      clientId: process.env.OIDC_CLIENT_ID!,
+      oidcIssuerUrl: process.env.OIDC_ISSUER_URL!,
+      tokenExpiryFromAuthInSeconds: 3600,
+      tokenExpireFromIssueInSeconds: 3600
+    }
   }
 });

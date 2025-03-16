@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Authenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api';
 import { Schema } from '../../../../amplify/data/resource';
 import DashboardLayout from '../../../components/DashboardLayout';
@@ -10,14 +9,23 @@ import {
   TextField,
   Button} from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
-import { fetchAuthSession } from 'aws-amplify/auth';
 import BreadcrumbsComponent from '../../../components/BreadcrumbsComponent';
 import RequireAuth from '../../../components/RequireAuth';
+import { useSession } from 'next-auth/react';
 
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({
+  authMode: 'lambda',
+  headers: async () => {
+    const session = await fetch('/api/auth/session').then(res => res.json());
+    return {
+      Authorization: `Bearer ${session?.idToken}`
+    };
+  }
+});
 
 export default function NewGame() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -29,16 +37,10 @@ export default function NewGame() {
     setIsSubmitting(true);
 
     try {
-      const session = await fetchAuthSession();
-      if (!session.tokens?.idToken) throw new Error('User not signed in');
+      if (!session) throw new Error('User not signed in');
       
       const newGame = await client.mutations.customCreateGame({
         ...formData,
-      }, {
-        authMode: 'userPool',
-        headers: {
-          'Authorization': session.tokens.idToken.toString(),
-        }
       });
 
       router.push(`/games/${newGame?.data?.id}`);
@@ -54,54 +56,50 @@ export default function NewGame() {
       <UserProvider>
         <DashboardLayout>
           <main className="min-h-screen p-8">
-            <Authenticator>
-              {({ }) => (
-                <div className="max-w-2xl mx-auto space-y-6">
-                  <BreadcrumbsComponent
-                    links={[
-                      { href: '/', label: 'Home' },
-                      { href: '/games', label: 'Games' }
-                    ]}
-                    current="New Game"
-                  />
+            <div className="max-w-2xl mx-auto space-y-6">
+              <BreadcrumbsComponent
+                links={[
+                  { href: '/', label: 'Home' },
+                  { href: '/games', label: 'Games' }
+                ]}
+                current="New Game"
+              />
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <TextField
-                      fullWidth
-                      label="Game Name"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <TextField
+                  fullWidth
+                  label="Game Name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
 
-                    <TextField
-                      fullWidth
-                      label="Description"
-                      multiline
-                      rows={4}
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    />
+                <TextField
+                  fullWidth
+                  label="Description"
+                  multiline
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
 
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="outlined"
-                        onClick={() => router.push('/')}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={isSubmitting}
-                      >
-                        Create Game
-                      </Button>
-                    </div>
-                  </form>
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outlined"
+                    onClick={() => router.push('/')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting}
+                  >
+                    Create Game
+                  </Button>
                 </div>
-              )}
-            </Authenticator>
+              </form>
+            </div>
           </main>
         </DashboardLayout>
       </UserProvider>

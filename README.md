@@ -1,103 +1,139 @@
-This is an [AWS Amplify](https://aws.amazon.com/amplify/) with [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js with AWS Lambda Web Adapter - AWS China Region Migration
 
-## Getting Started
+This branch demonstrates how to deploy a Next.js application to AWS Lambda in China regions using the AWS Lambda Web Adapter. The application is deployed to AWS API Gateway + Lambda, while using Amplify for backend services with specific adaptations for AWS China regions.
 
-First, install the dependencies:
+## China Region Adaptations & Migration Features
 
-```bash
-npm install
-```
+This branch contains specific modifications to support deployment in AWS China regions:
 
-This project uses [API-Football](https://rapidapi.com/api-sports/api/api-football) to get football data. You need to sign up and get an API key. Store your API key in the `RAPID_API_KEY` as a secret for Amplify.
+1. **External Authentication**: Amplify Gen2 no longer manages authentication as AWS China doesn't provide Cognito User Pool. Instead, an external OIDC provider is used for authentication.
 
-```bash
-npx ampx sandbox secret set RAPID_API_KEY
-```
+2. **AppSync Authentication**: The external OIDC provider is used to authenticate with AppSync services.
 
-Then, deploy the cloud infrastructure on AWS sandbox:
+3. **Disabled Amplify UI Features**: Amplify UI features that are tightly coupled with Amazon Bedrock (which is not available in China regions) have been disabled.
 
-```bash
-npx ampx sandbox
-```
+4. **CDK-Based Deployment**: Implements a custom CDK project (`cdk-deployment`) to deploy the Next.js application to Lambda using the AWS Lambda Web Adapter, replacing Amplify Hosting which has limitations in China regions.
 
-Then, run the development server:
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+5. **Alternative CI/CD Options**: 
+   - **AWS CodeBuild**: The deployment process can be migrated to AWS CodeBuild pipelines
+   - **GitHub Actions**: Workflows can be set up to automate the CDK deployment process
+   
+   Both options serve as alternatives to the Amplify CI/CD pipeline that's used in the main branch.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    User([User]) --> AmplifyHosting[Amplify Hosting<br>with CI/CD Pipeline]
-    GitHub[(GitHub)] --> AmplifyHosting
-    
-    AmplifyHosting -->|Deploys Frontend| FrontendApp
-    AmplifyHosting -->|Deploys Backend| BackendSystem
+    User([User]) --> APIGateway[AWS API Gateway]
+    APIGateway --> Lambda[AWS Lambda with\nLambda Web Adapter]
+    Lambda --> NextJS[Next.js Application]
     
     subgraph "Frontend"
-        FrontendApp[Next.js Application]
-        FrontendApp --> AmplifyUI[Amplify UI]
-        AmplifyUI --> AIComponents["AI Generation<br>& Chat Components"]
+        NextJS
+        NextJS --> NextAuth[NextAuth.js]
+        NextAuth --> ExternalOIDC[External OIDC Provider]
     end
     
     subgraph "Backend (Amplify Gen2)"
-        BackendSystem[Amplify Gen2 Backend]
-        style BackendSystem fill:none,stroke:none
-        
-        FrontendApp --> AppSync[AWS AppSync]
+        NextJS --> AppSync[AWS AppSync]
         AppSync --> DynamoDB[(DynamoDB)]
         
-        FrontendApp --> Cognito[(AWS Cognito)]
-        Cognito --> FrontendApp
-        Cognito -.->|Authentication| AppSync
-        
-        AIComponents -->|GraphQL API| AppSync
-        AIComponents -->|WebSocket| AppSync
+        ExternalOIDC -.-> |Authentication| AppSync
         
         subgraph "AppSync JS Resolvers"
             AppSync --> GameHandlers[Game Handlers]
             AppSync --> LeagueHandlers[League Handlers]
         end
+    end
+    
+    subgraph "Deployment"
+        CDK[AWS CDK] --> DeployLambda[Deploy Lambda]
+        CDK --> DeployAPI[Deploy API Gateway]
+        CDK --> DeployAmplify[Deploy Amplify Resources]
+    end
+    
+    subgraph "CI/CD Options"
+        GitHub[(GitHub)] --> |Option 1| GitHubActions[GitHub Actions]
+        GitHub --> |Option 2| CodeBuild[AWS CodeBuild]
         
-        AppSync -->|HTTP Integration| Bedrock[Amazon Bedrock]
-        AppSync --> AILambda[AI Lambda Functions]
-        AILambda --> Bedrock
-        AILambda -->|WebSocket Response| AIComponents
-        
-        %% Invisible connection to ensure backend system node is part of layout
-        BackendSystem -.-> AppSync
+        GitHubActions --> CDK
+        CodeBuild --> CDK
     end
 ```
 
-## AWS China Region Deployment
 
-If you need to deploy this application to AWS China regions, check out the [`aws-china-migration`](https://github.com/zxkane/game-match-playground/tree/aws-china-migration) branch which contains specific adaptations:
+## Prerequisites
 
-1. **External Authentication**: Uses external OIDC provider for authentication instead of Cognito User Pool (not available in China regions)
-2. **AppSync Authentication**: Configures AppSync to work with the external OIDC provider
-3. **UI Modifications**: Disables Amplify UI features that depend on Amazon Bedrock (not available in China regions)
-4. **CDK-Based Deployment**: Uses AWS CDK with Lambda Web Adapter and API Gateway instead of Amplify Hosting
+- Node.js 20.x
+- AWS CLI configured for cn-north-1 region
+- AWS CDK installed
+- Docker installed
 
-The `aws-china-migration` branch includes a comprehensive architecture diagram and detailed setup instructions for deploying to AWS China regions.
+## Project Structure
 
-## Learn More
+- `/src`: Next.js application code
+- `/amplify`: Amplify Gen2 backend code
+- `/cdk-deployment`: CDK application for deploying to AWS
 
-To learn more about Next.js, take a look at the following resources:
+## Local Development
 
-- [AWS Amplify Documentation](https://docs.aws.amazon.com/amplify/latest/userguide/what-is-amplify.html) - learn about AWS Amplify features and API.
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. Configure Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Update the `.env.production` file with your actual configuration values:
 
-## Deploy on Amplify Hosting
+```
+AWS_REGION=cn-north-1
+AWS_PROFILE=your-aws-profile-to-access-cn-north-1
 
-View the [Amplify Hosting](https://docs.aws.amazon.com/amplify/latest/userguide/getting-started.html) documentation for more information.
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+OIDC_ISSUER_URL=your-issuer-url
+
+NEXTAUTH_URL=http:/localhost:3000
+NEXTAUTH_SECRET=your-nextauth-secret
+```
+
+### 2. Deploy the AWS infrastructure managed by Amplify Gen2
+
+```bash
+npm install
+npx ampx sandbox
+```
+
+### 3. Run the frontend application locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Deployment
+
+### 1. Follow the local development steps 1 and 2
+
+### 2. Deploy the frontend application with CDK
+
+```bash
+bash ./deploy.sh
+```
+
+After deployment, the CDK will output the API Gateway URL, which you can use to access your application.
+
+### 3. Update Environment Variables
+
+After deployment, update the below environment variable with the actual API Gateway URL:
+
+```
+NEXTAUTH_URL=https://<api id>.execute-api.cn-north-1.amazonaws.com.cn/
+```
+### 4. Re-deploy the frontend application with CDK
+
+```bash
+bash ./deploy.sh
+```
+
+### 5. Add the portal URL to the OIDC client redirect URIs
+
+### 6. Access the application
+
+Access the application using the API Gateway URL.

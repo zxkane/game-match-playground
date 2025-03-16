@@ -1,0 +1,7 @@
+# CDK generated files
+cdk-deployment/cdk.out/**
+
+# Other build outputs that shouldn't be linted
+node_modules
+.next
+out

@@ -1,7 +1,9 @@
 'use client';
 
-import { AmplifyProvider } from '../components/AmplifyProvider';
+import { SessionProvider as NextAuthProvider } from 'next-auth/react';
 import { ThemeProvider, createTheme, defaultDarkModeOverride } from '@aws-amplify/ui-react';
+import { Amplify } from 'aws-amplify';
+import config from '../../amplify_outputs.json';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
@@ -13,6 +15,29 @@ import PetsIcon from '@mui/icons-material/Pets';
 import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { DEFAULT_THEME, SITE_TITLE, ThemeKey } from '../constant';
+
+// Configure Amplify
+Amplify.configure(config, { 
+  ssr: true,
+  Auth: {
+    tokenProvider: {
+      async getTokens({ forceRefresh } = {}) {
+        const session = await fetch('/api/auth/session').then(res => res.json());
+        if (!session?.access_token) return null;
+        return {
+          accessToken: {
+            toString: () => session.access_token,
+            payload: { sub: session.sub }
+          },
+          idToken: {
+            toString: () => session.id_token,
+            payload: { sub: session.sub }
+          }
+        };
+      }
+    }
+  }
+});
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -154,7 +179,6 @@ const themes = {
     },
     overrides: [defaultDarkModeOverride],
   }),
-  
   christmas: createTheme({
     name: 'christmas-theme',
     tokens: {
@@ -220,13 +244,13 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
       <body>
-        <ThemeProvider theme={selectedTheme}>
-          <AmplifyProvider>
+        <NextAuthProvider>
+          <ThemeProvider theme={selectedTheme}>
             <main className="min-h-screen">
               {children}
             </main>
-          </AmplifyProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

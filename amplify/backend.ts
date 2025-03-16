@@ -1,5 +1,4 @@
 import { defineBackend } from '@aws-amplify/backend';
-import { auth } from './auth/resource';
 import { data, leagueHandler, standingsHandler } from './data/resource';
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { Table, AttributeType, BillingMode } from 'aws-cdk-lib/aws-dynamodb';
@@ -11,7 +10,6 @@ import { getCrossRegionModelId, getCurrentRegion } from './utils';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 
 export const backend = defineBackend({
-  auth,
   data,
   leagueHandler,
   standingsHandler,

@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchUserAttributes } from 'aws-amplify/auth';
+'use client';
+
+import React, { createContext, useContext } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface UserContextType {
   userEmail: string;
@@ -9,22 +11,11 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [userEmail, setUserEmail] = useState<string>('');
-
-  useEffect(() => {
-    const getUserEmail = async () => {
-      try {
-        const attributes = await fetchUserAttributes();
-        setUserEmail(attributes.email || '');
-      } catch (error) {
-        console.error('Error fetching user attributes:', error);
-      }
-    };
-    getUserEmail();
-  }, []);
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email || '';
 
   return (
-    <UserContext.Provider value={{ userEmail, setUserEmail }}>
+    <UserContext.Provider value={{ userEmail, setUserEmail: () => {} }}>
       {children}
     </UserContext.Provider>
   );

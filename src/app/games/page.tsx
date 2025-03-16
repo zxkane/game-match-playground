@@ -12,7 +12,15 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import RequireAuth from '../../components/RequireAuth';
 
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({
+  authMode: 'lambda',
+  headers: async () => {
+    const session = await fetch('/api/auth/session').then(res => res.json());
+    return {
+      Authorization: `Bearer ${session?.idToken}`
+    };
+  }
+});
 
 type Game = Omit<Schema['Game']['type'], 'createdAt' | 'players' | 'rounds'>;
 

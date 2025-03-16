@@ -9,12 +9,13 @@ import {
   Paper,
   CircularProgress,
   Alert,
+  Typography,
 } from '@mui/material';
 import { UserProvider } from '@/context/UserContext';
 import RequireAuth from '../../../components/RequireAuth';
 import BreadcrumbsComponent from '../../../components/BreadcrumbsComponent';
-import { fetchAuthSession } from 'aws-amplify/auth';
-import { getCurrentUser } from 'aws-amplify/auth';
+import { useSession } from 'next-auth/react';
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 // Import components
 import GameHeader from './components/GameHeader';
@@ -27,7 +28,15 @@ import GameInsights from './components/GameInsights';
 import AddTeamDialog from './components/dialogs/AddTeamDialog';
 import AddMatchDialog from './components/dialogs/AddMatchDialog';
 
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({
+  authMode: 'lambda',
+  headers: async () => {
+    const session = await fetch('/api/auth/session').then(res => res.json());
+    return {
+      Authorization: `Bearer ${session?.idToken}`
+    };
+  }
+});
 
 type GameStatus = 'active' | 'completed' | 'deleted';
 
@@ -72,20 +81,13 @@ export default function GameDetail({ params }: PageProps) {
   });
   const [currentUser, setCurrentUser] = useState<{ username: string, userId: string } | null>(null);
   const [gameViewers, setGameViewers] = useState<GameViewer[]>([]);
+  const { data: session } = useSession();
 
   const updateGameStatus = async (gameId: string, status: GameStatus) => {
     try {
-      const session = await fetchAuthSession();
-      if (!session.tokens?.idToken) throw new Error('User not signed in');
-
       const result = await client.mutations.updateGameStatus({
         id: gameId,
         newStatus: status
-      }, {
-        authMode: 'userPool',
-        headers: {
-          'Authorization': session.tokens.idToken.toString(),
-        }
       });
 
       if (result.errors) {
@@ -448,17 +450,17 @@ export default function GameDetail({ params }: PageProps) {
   useEffect(() => {
     const initUser = async () => {
       try {
-        const user = await getCurrentUser();
+        if (!session?.user) throw new Error('No user session found');
         setCurrentUser({
-          username: user.username,
-          userId: user.userId
+          username: session.user.email || '',
+          userId: session.user.id
         });
       } catch (error) {
         console.error('Error getting current user:', error);
       }
     };
     initUser();
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     if (!currentUser || !resolvedParams.id) return;
@@ -491,18 +493,8 @@ export default function GameDetail({ params }: PageProps) {
     // Add viewer record when component mounts
     const addViewer = async () => {
       try {
-        const session = await fetchAuthSession();
-        if (!session.tokens?.idToken) {
-          throw new Error('User not authenticated');
-        }
-
         const result = await client.mutations.addGameViewer({
           gameId: resolvedParams.id,
-        }, {
-          authMode: 'userPool',
-          headers: {
-            'Authorization': session.tokens.idToken.toString(),
-          }
         });
 
         if (result.errors) {

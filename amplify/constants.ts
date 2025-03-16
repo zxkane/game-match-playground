@@ -9,7 +9,7 @@ export const authConfig: AuthConfig = {
 
 export const llmConfig: LLMConfig = {
   model: (process.env.LLM_MODEL as AllowedModel) || "Claude 3.5 Sonnet",
-  systemPrompt: process.env.LLM_SYSTEM_PROMPT || '',
+  systemPrompt: process.env.LLM_SYSTEM_PROMPT || 'I am a football expert.',
   footballPrompt: process.env.FOOTBALL_SYSTEM_PROMPT || '',
   customModelId: process.env.CUSTOM_MODEL_ID,
   crossRegionInference: process.env.CROSS_REGION_INFERENCE === 'true'

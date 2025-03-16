@@ -10,7 +10,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { signOut } from 'aws-amplify/auth';
+import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { Divider, Paper, Avatar, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
@@ -22,8 +22,8 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useRouter } from 'next/navigation';
 import { stringAvatar } from '@/utils/avatar';
-import ChatBotContainer from '@/components/ChatBotContainer';
-import { ConversationsProvider } from '../providers/ConversationsProvider';
+// import ChatBotContainer from '@/components/ChatBotContainer';
+// import { ConversationsProvider } from '../providers/ConversationsProvider';
 
 const drawerWidth = 240;
 
@@ -115,7 +115,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     try {
       await signOut();
-      router.push('/');
+      handleClose();
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -440,9 +440,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {children}
         </Paper>
         </Box>
-        <ConversationsProvider autoLoad={true}>
+        {/* <ConversationsProvider autoLoad={true}>
           <ChatBotContainer email={userEmail} />
-        </ConversationsProvider>
+        </ConversationsProvider> */}
       </Box>
     </MUIThemeProvider>
   );
