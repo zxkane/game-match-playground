@@ -333,25 +333,19 @@ const schema = a.schema({
     }))
     .authorization(allow => [allow.authenticated()]),
 
-  getCurrentDate: a.query()
-    .returns(a.customType({
-      currentDate: a.string().required(),
-      season: a.integer().required(),
-    }))
-    .authorization(allow => [allow.authenticated()])
-    .handler(a.handler.custom({
-      entry: './get-current-date-handler.js'
-    })),
-
   chat: a.conversation({
     aiModel: CROSS_REGION_INFERENCE ? {
       resourcePath: getCrossRegionModelId(getCurrentRegion(undefined), CUSTOM_MODEL_ID!),
      } : a.ai.model(LLM_MODEL),
     systemPrompt: `${FOOTBALL_SYSTEM_PROMPT}
 
-When asked about current standings or this season's standings, first use getCurrentDate to determine the correct season, then use that season parameter with the standings query.
+When asked about current standings or this season's standings, first determine the correct season below rules, then use that season parameter with the standings query.
 For example:
-1. Get current date -> returns season 2023 (for dates between Jan-Jun 2024) or 2024 (for dates between Jul-Dec 2024)
+1. Use current date to determine the season. 
+  - For most european leagues, the season starts in August and ends in May.
+    1. If the current date is between August and May, use the current year as the season number.
+    2. If the current date is before August or after May, use the previous year as the season number.
+  - For the leagues in Asia, the season starts in July and ends in June. For example, China Super League.
 2. Use that season number in the standings query`,
     tools: [
       a.ai.dataTool({
@@ -372,16 +366,6 @@ For example:
           Use the start year of the season as the season parameter, for example, 2024 for the 2024/2025 season.
         `.trim().replace(/\n\s+/g, ' '),
         query: a.ref('standings'),
-      }),
-      a.ai.dataTool({
-        name: 'getCurrentDate',
-        description: `
-          Get the current date to determine the current football season.
-          For dates between July and December, use that year as the season.
-          For dates between January and June, use the previous year as the season.
-          For example: If current date is April 2024, use 2023 as season. If current date is August 2024, use 2024 as season.
-        `.trim().replace(/\n\s+/g, ' '),
-        query: a.ref('getCurrentDate'),
       }),
     ],
   }).authorization(allow => allow.owner()),

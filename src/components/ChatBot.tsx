@@ -150,6 +150,11 @@ export default function ChatBot({
                 messageRenderer={{
                   text: ({ text }) => <ReactMarkdown>{text}</ReactMarkdown>,
                 }}
+                aiContext={() => {
+                  return {
+                    currentDateTime: new Date().toLocaleString(),
+                  };
+                }}
               />
             </Box>
           </Paper>
