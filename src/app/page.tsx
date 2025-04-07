@@ -4,7 +4,7 @@ import { Authenticator, Flex, Divider, Button } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { isGoogleAuthEnabled, oidcProvider, SITE_TITLE } from '../constant';
+import { adminOnlySignUp, isGoogleAuthEnabled, oidcProvider, SITE_TITLE } from '../constant';
 import { fetchUserAttributes, getCurrentUser, signInWithRedirect } from 'aws-amplify/auth';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
@@ -115,7 +115,7 @@ export default function Home() {
           signUpAttributes={['email']}
           initialState="signIn"
           socialProviders={isGoogleAuthEnabled ? ['google'] : []}
-          hideSignUp={Boolean(oidcProvider || isGoogleAuthEnabled)}
+          hideSignUp={Boolean(oidcProvider || isGoogleAuthEnabled || adminOnlySignUp)}
         >
           {({ user }) => <AuthenticatedRoute user={user} />}
         </Authenticator>

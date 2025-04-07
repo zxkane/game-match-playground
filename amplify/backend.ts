@@ -6,7 +6,7 @@ import { Table, AttributeType, BillingMode } from 'aws-cdk-lib/aws-dynamodb';
 import { IRole, PolicyStatement, Policy } from 'aws-cdk-lib/aws-iam';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { CfnFunction } from 'aws-cdk-lib/aws-lambda';
-import { CROSS_REGION_INFERENCE, CUSTOM_MODEL_ID, isDevelopment } from './constants';
+import { authConfig, CROSS_REGION_INFERENCE, CUSTOM_MODEL_ID, isDevelopment } from './constants';
 import { getCrossRegionModelId, getCurrentRegion } from './utils';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 
@@ -16,6 +16,12 @@ export const backend = defineBackend({
   leagueHandler,
   standingsHandler,
 });
+
+// extract L1 CfnUserPool resources
+const { cfnUserPool } = backend.auth.resources.cfnResources;
+cfnUserPool.adminCreateUserConfig = {
+  allowAdminCreateUserOnly: authConfig.adminOnlySignUp,
+};
 
 const externalTableStack = backend.createStack('ExternalTableStack');
 

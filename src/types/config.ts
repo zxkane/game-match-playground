@@ -1,6 +1,7 @@
 export interface AuthConfig {
   isGoogleAuthEnabled: boolean;
   oidcProvider: string | undefined;
+  adminOnlySignUp: boolean;
 }
 
 export type AllowedModel = 

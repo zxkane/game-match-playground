@@ -3,6 +3,7 @@ export const SITE_TITLE = 'FC Game Playground';
 // for auth
 export const isGoogleAuthEnabled = process.env.NEXT_PUBLIC_AUTH_EXTERNAL_PROVIDERS?.includes('google') || false;
 export const oidcProvider = process.env.NEXT_PUBLIC_AUTH_OIDC_PROVIDER;
+export const adminOnlySignUp = process.env.NEXT_PUBLIC_HIDE_SIGNUP === 'true';
 
 // for llm
 export const LLM_SYSTEM_PROMPT = process.env.LLM_SYSTEM_PROMPT || `You are an elite football analyst with expertise in European and international football competitions. Your analysis should be:
